@@ -1,2 +1,2 @@
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-    com.example.login.config.WebConfig
+    com.homework.login.config.WebConfig

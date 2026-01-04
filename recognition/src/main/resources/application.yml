@@ -1,0 +1,46 @@
+server:
+  port: 8083
+
+spring:
+  application:
+    name: recognition
+  cloud:
+    nacos:
+      discovery:
+        server-addr: localhost:8848
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+# Python服务配置
+python:
+  port:
+    url: http://localhost:5000
+    # 人脸数据库路径
+    db-path: d:/bianchenglianxi/java/project/face_recognition/python_port/img
+    # 临时文件路径
+    temp-path: d:/bianchenglianxi/java/project/face_recognition/python_port/uploads
+    # 清理间隔（毫秒）
+    cleanup-interval: 3600000
+
+# 人脸检测配置
+face:
+  detection:
+    # 检测间隔（毫秒）
+    interval: 5000
+    # 拍照保存路径
+    photo-path: d:/bianchenglianxi/java/project/face_recognition/python_port/photos
+
+# 日志配置
+logging:
+  level:
+    com.homework.recognition: info
+    com.homework.common.feign: debug
+
+# Swagger配置
+swagger:
+  base-package: com.homework.recognition.controller
+  title: 人脸识别服务API
+  description: 人脸识别服务接口文档
+  version: 1.0.0

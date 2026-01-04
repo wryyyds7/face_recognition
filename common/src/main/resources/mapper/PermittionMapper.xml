@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.example.common.mapper.PermittionMapper">
+<mapper namespace="com.homework.common.mapper.PermittionMapper">
 
     <!-- 已废弃：使用基于角色的授权 -->
     <!--

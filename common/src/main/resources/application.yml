@@ -28,5 +28,5 @@ mybatis:
 logging:
   level:
     org.springframework.security: TRACE
-    com.example.common.feign.BoChaClient: DEBUG
+    com.homework.common.feign.BoChaClient: DEBUG
     feign.Logger: DEBUG
