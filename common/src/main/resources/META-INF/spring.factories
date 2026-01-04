@@ -1,0 +1,3 @@
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+    com.example.common.config.MvcConfig,\
+    com.example.common.config.SecurityConfig
