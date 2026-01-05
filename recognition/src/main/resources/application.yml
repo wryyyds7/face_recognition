@@ -1,5 +1,5 @@
 server:
-  port: 8083
+  port: 0
 
 spring:
   application:
@@ -10,33 +10,36 @@ spring:
         server-addr: localhost:8848
   servlet:
     multipart:
+      # 从共享配置文件读取：config/config.yml -> upload.max-file-size
       max-file-size: 10MB
+      # 从共享配置文件读取：config/config.yml -> upload.max-request-size
       max-request-size: 10MB
+  main:
+    allow-bean-definition-overriding: true
 
 # Python服务配置
 python:
   port:
+    # 从共享配置文件读取：config/config.yml -> python.url
     url: http://localhost:5000
-    # 人脸数据库路径
+    # 人脸数据库路径 - 从共享配置文件读取：config/config.yml -> database.root-path
     db-path: d:/bianchenglianxi/java/project/face_recognition/python_port/img
-    # 临时文件路径
+    # 临时文件路径 - 从共享配置文件读取：config/config.yml -> database.temp-path
     temp-path: d:/bianchenglianxi/java/project/face_recognition/python_port/uploads
-    # 清理间隔（毫秒）
-    cleanup-interval: 3600000
+    # 清理间隔（毫秒） - 从共享配置文件读取：config/config.yml -> detection.cleanup-interval - 24小时
+    cleanup-interval: 86400000
 
 # 人脸检测配置
 face:
   detection:
-    # 检测间隔（毫秒）
+    # 检测间隔（毫秒） - 从共享配置文件读取：config/config.yml -> detection.interval
     interval: 5000
-    # 拍照保存路径
-    photo-path: d:/bianchenglianxi/java/project/face_recognition/python_port/photos
 
 # 日志配置
 logging:
   level:
-    com.homework.recognition: info
-    com.homework.common.feign: debug
+    com.example.recognition: info
+    com.example.common.feign: debug
 
 # Swagger配置
 swagger:

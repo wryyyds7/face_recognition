@@ -19,8 +19,9 @@ public interface PythonPortClient {
 
     /**
      * 人脸验证接口 - 通过路径调用
+     * 检测单张图片是否有人脸
      *
-     * @param request 请求参数，包含img1_path和img2_path
+     * @param request 请求参数，包含img_path
      * @return 验证结果
      */
     @PostMapping(value = "/api/verify", consumes = MediaType.APPLICATION_JSON_VALUE)
@@ -28,13 +29,13 @@ public interface PythonPortClient {
 
     /**
      * 人脸验证接口 - 通过文件上传调用
+     * 检测单张图片是否有人脸
      *
-     * @param img1 第一张图片
-     * @param img2 第二张图片
+     * @param img 待检测图片
      * @return 验证结果
      */
     @PostMapping(value = "/api/verify", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    Map<String, Object> verifyByFile(@RequestPart("img1") MultipartFile img1, @RequestPart("img2") MultipartFile img2);
+    Map<String, Object> verifyByFile(@RequestPart("img") MultipartFile img);
 
     /**
      * 人脸识别接口 - 通过路径调用
@@ -57,15 +58,14 @@ public interface PythonPortClient {
 
     /**
      * 默认方法，简化人脸验证调用（通过路径）
+     * 检测单张图片是否有人脸
      *
-     * @param img1Path 第一张图片路径
-     * @param img2Path 第二张图片路径
+     * @param imgPath 待检测图片路径
      * @return 验证结果
      */
-    default Map<String, Object> verify(String img1Path, String img2Path) {
+    default Map<String, Object> verify(String imgPath) {
         Map<String, String> request = new java.util.HashMap<>();
-        request.put("img1_path", img1Path);
-        request.put("img2_path", img2Path);
+        request.put("img_path", imgPath);
         return verifyByPath(request);
     }
 

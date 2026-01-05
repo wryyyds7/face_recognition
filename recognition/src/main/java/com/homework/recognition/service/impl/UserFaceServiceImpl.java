@@ -254,7 +254,7 @@ public class UserFaceServiceImpl implements UserFaceService {
     }
 
     /**
-     * 生成文件名，使用用户名+序号
+     * 生成文件名，使用用户名作为文件名
      *
      * @param userName 用户名
      * @param originalFilename 原始文件名
@@ -264,30 +264,10 @@ public class UserFaceServiceImpl implements UserFaceService {
     private String generateFileName(String userName, String originalFilename) throws IOException {
         // 获取文件扩展名
         String extension = getFileExtension(originalFilename);
-
-        // 获取用户人脸照片目录
-        Path userFaceDir = getOrCreateUserFaceDir(userName);
-
-        // 遍历目录，获取当前序号
-        int maxSeq = 0;
-        for (String imgPath : getUserFaceListByUserName(userName)) {
-            String filename = Paths.get(imgPath).getFileName().toString();
-            if (filename.startsWith(userName)) {
-                try {
-                    String seqStr = filename.substring(userName.length(), filename.indexOf("."));
-                    int seq = Integer.parseInt(seqStr);
-                    if (seq > maxSeq) {
-                        maxSeq = seq;
-                    }
-                } catch (NumberFormatException e) {
-                    // 忽略非数字序号的文件
-                    log.warn("文件名格式不符合要求，忽略：{}", filename);
-                }
-            }
-        }
-
-        // 生成新文件名：用户名+序号+扩展名
-        return userName + (maxSeq + 1) + "." + extension;
+        
+        // 生成文件名：用户名+扩展名
+        // 直接使用用户名作为文件名，确保用户上传的永久识别图像的名字是自己的姓名
+        return userName + "." + extension;
     }
 
     /**

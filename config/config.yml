@@ -1,0 +1,26 @@
+# 人脸识别系统共享配置文件
+
+# Python服务配置
+python:
+  port: 5000
+  host: localhost
+  url: http://${python.host}:${python.port}
+
+# 人脸数据库配置
+database:
+  # 人脸数据库根路径
+  root-path: d:/bianchenglianxi/java/project/face_recognition/python_port/img
+  # 临时文件路径
+  temp-path: d:/bianchenglianxi/java/project/face_recognition/python_port/uploads
+
+# 人脸检测配置
+detection:
+  # 检测间隔（毫秒）
+  interval: 5000
+  # 清理间隔（毫秒）- 24小时
+  cleanup-interval: 86400000
+
+# 上传文件配置
+upload:
+  max-file-size: 10MB
+  max-request-size: 10MB

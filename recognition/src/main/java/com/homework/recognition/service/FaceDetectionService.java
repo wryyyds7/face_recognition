@@ -12,17 +12,18 @@ public interface FaceDetectionService {
     /**
      * 实时人脸检测
      * 定时拍照并发送到Python服务进行检测和识别
+     * @return 包含检测结果和识别信息的Map
      */
-    void realTimeFaceDetection();
+    Map<String, Object> realTimeFaceDetection();
 
     /**
      * 人脸验证
+     * 检测单张图片是否有人脸
      *
-     * @param img1Path 第一张图片路径
-     * @param img2Path 第二张图片路径
+     * @param imgPath 待检测图片路径
      * @return 验证结果
      */
-    Map<String, Object> verifyFace(String img1Path, String img2Path);
+    Map<String, Object> verifyFace(String imgPath);
 
     /**
      * 人脸识别

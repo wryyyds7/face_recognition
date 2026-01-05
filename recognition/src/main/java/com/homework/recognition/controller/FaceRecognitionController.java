@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -43,8 +44,27 @@ public class FaceRecognitionController extends BaseController {
     public Result manualDetect() {
         try {
             log.info("手动触发实时人脸检测");
-            faceDetectionService.realTimeFaceDetection();
-            return Result.success("人脸检测已触发");
+            Map<String, Object> resultMap = faceDetectionService.realTimeFaceDetection();
+            Integer code = (Integer) resultMap.get("code");
+            
+            switch (code) {
+                case 1:
+                    String name = (String) resultMap.get("name");
+                    // 创建包含姓名的响应数据
+                    Map<String, Object> successData = new HashMap<>();
+                    successData.put("name", name);
+                    return Result.success(successData);
+                case 2:
+                    return Result.error("未知人员");
+                case 3:
+                    return Result.error("没有检测到人脸");
+                case 4:
+                    return Result.error("未知的验证状态");
+                case 5:
+                    return Result.error("实时人脸检测失败");
+                default:
+                    return Result.error("未知的验证状态");
+            }
         } catch (Exception e) {
             log.error("手动触发人脸检测失败：{}", e.getMessage(), e);
             return Result.error("人脸检测触发失败：" + e.getMessage());
@@ -53,18 +73,47 @@ public class FaceRecognitionController extends BaseController {
 
     /**
      * 人脸验证
+     * 检测单张图片是否有人脸
      *
-     * @param img1Path 第一张图片路径
-     * @param img2Path 第二张图片路径
+     * @param imgPath 待检测图片路径
      * @return 验证结果
      */
     @PostMapping("/verify")
     @ApiOperation("人脸验证")
-    public Result verifyFace(@RequestParam("img1Path") String img1Path, @RequestParam("img2Path") String img2Path) {
+    public Result verifyFace(@RequestParam("imgPath") String imgPath) {
         try {
-            log.info("人脸验证，图片1：{}，图片2：{}", img1Path, img2Path);
-            Map<String, Object> result = faceDetectionService.verifyFace(img1Path, img2Path);
-            return Result.success(result);
+            log.info("人脸验证，图片路径：{}", imgPath);
+            Map<String, Object> verificationResult = faceDetectionService.verifyFace(imgPath);
+            
+            // 处理验证结果
+            String status = (String) verificationResult.get("status");
+            if (status != null) {
+                switch (status) {
+                    case "recognized":
+                        String identity = (String) verificationResult.get("identity");
+                        String name = null;
+                        if (identity != null) {
+                            int lastDotIndex = identity.lastIndexOf('.');
+                            if (lastDotIndex > 0) {
+                                name = identity.substring(0, lastDotIndex);
+                            } else {
+                                name = identity;
+                            }
+                        }
+                        // 创建包含姓名的响应数据
+                        Map<String, Object> successData = new HashMap<>();
+                        successData.put("name", name);
+                        return Result.success(successData);
+                    case "unknown_face":
+                        return Result.error("未知人员");
+                    case "no_face":
+                        return Result.error("没有检测到人脸");
+                    default:
+                        return Result.error("未知的验证状态");
+                }
+            } else {
+                return Result.error("未知的验证状态");
+            }
         } catch (Exception e) {
             log.error("人脸验证失败：{}", e.getMessage(), e);
             return Result.error("人脸验证失败：" + e.getMessage());
@@ -82,8 +131,37 @@ public class FaceRecognitionController extends BaseController {
     public Result recognizeFace(@RequestParam("imgPath") String imgPath) {
         try {
             log.info("人脸识别，图片路径：{}", imgPath);
-            Map<String, Object> result = faceDetectionService.recognizeFace(imgPath);
-            return Result.success(result);
+            Map<String, Object> recognitionResult = faceDetectionService.recognizeFace(imgPath);
+            
+            // 处理识别结果
+            String status = (String) recognitionResult.get("status");
+            if (status != null) {
+                switch (status) {
+                    case "recognized":
+                        String identity = (String) recognitionResult.get("identity");
+                        String name = null;
+                        if (identity != null) {
+                            int lastDotIndex = identity.lastIndexOf('.');
+                            if (lastDotIndex > 0) {
+                                name = identity.substring(0, lastDotIndex);
+                            } else {
+                                name = identity;
+                            }
+                        }
+                        // 创建包含姓名的响应数据
+                        Map<String, Object> successData = new HashMap<>();
+                        successData.put("name", name);
+                        return Result.success(successData);
+                    case "unknown_face":
+                        return Result.error("未知人员");
+                    case "no_face":
+                        return Result.error("没有检测到人脸");
+                    default:
+                        return Result.error("未知的验证状态");
+                }
+            } else {
+                return Result.error("未知的验证状态");
+            }
         } catch (Exception e) {
             log.error("人脸识别失败：{}", e.getMessage(), e);
             return Result.error("人脸识别失败：" + e.getMessage());
