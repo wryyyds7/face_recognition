@@ -1,6 +1,9 @@
 from flask import Flask, request, jsonify
 from Enter import deepface_model_verify, deepface_model_find, deepface_model_extract
 import os
+import time
+import requests
+from threading import Thread
 from config_reader import config
 
 app = Flask(__name__)
@@ -11,6 +14,96 @@ if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
+# Nacos配置
+NACOS_SERVER = '127.0.0.1:8848'  # Nacos服务器地址
+SERVICE_NAME = 'python-port'  # 服务名称
+GROUP_NAME = 'DEFAULT_GROUP'  # 服务分组
+CLUSTER_NAME = 'DEFAULT'  # 集群名称
+
+# 获取Python服务配置
+PYTHON_CONFIG_PORT = config.get('python.port', 5000)  # 从配置读取端口，0表示随机端口
+PYTHON_HOST = config.get('python.host', 'localhost')
+
+# Nacos API URL
+NACOS_API_URL = f'http://{NACOS_SERVER}/nacos/v1/ns'
+
+# 实际使用的端口（初始化为配置值，启动后会更新为实际端口）
+actual_port = PYTHON_CONFIG_PORT
+
+# 服务注册函数
+def register_service(real_port):
+    """使用HTTP API将Python服务注册到Nacos"""
+    global actual_port
+    actual_port = real_port  # 更新实际使用的端口
+    
+    try:
+        # 准备注册参数
+        register_url = f'{NACOS_API_URL}/instance'
+        params = {
+            'serviceName': SERVICE_NAME,
+            'groupName': GROUP_NAME,
+            'ip': PYTHON_HOST,
+            'port': actual_port,
+            'clusterName': CLUSTER_NAME,
+            'weight': 1.0,
+            'enable': True,
+            'healthy': True
+        }
+        
+        # 发送注册请求
+        response = requests.post(register_url, params=params)
+        if response.status_code == 200 and response.text == 'ok':
+            print(f"✅ 成功将服务 {SERVICE_NAME} 注册到Nacos: {PYTHON_HOST}:{actual_port}")
+            
+            # 启动心跳检测
+            def heartbeat():
+                heartbeat_url = f'{NACOS_API_URL}/instance/beat'
+                while True:
+                    try:
+                        beat_params = {
+                            'serviceName': SERVICE_NAME,
+                            'groupName': GROUP_NAME,
+                            'ip': PYTHON_HOST,
+                            'port': actual_port,
+                            'clusterName': CLUSTER_NAME
+                        }
+                        beat_response = requests.put(heartbeat_url, params=beat_params)
+                        if beat_response.status_code == 200:
+                            pass  # 心跳发送成功，不需要打印
+                        time.sleep(5)  # 每5秒发送一次心跳
+                    except Exception as e:
+                        print(f"❤️ 心跳发送失败: {e}")
+                        time.sleep(1)  # 失败后1秒重试
+            
+            heartbeat_thread = Thread(target=heartbeat, daemon=True)
+            heartbeat_thread.start()
+            print(f"❤️ 心跳检测已启动")
+        else:
+            print(f"❌ 服务注册失败: {response.status_code} - {response.text}")
+            
+    except Exception as e:
+        print(f"❌ 服务注册失败: {e}")
+
+# 服务注销函数
+def deregister_service():
+    """使用HTTP API从Nacos注销Python服务"""
+    try:
+        deregister_url = f'{NACOS_API_URL}/instance'
+        params = {
+            'serviceName': SERVICE_NAME,
+            'groupName': GROUP_NAME,
+            'ip': PYTHON_HOST,
+            'port': actual_port,
+            'clusterName': CLUSTER_NAME
+        }
+        response = requests.delete(deregister_url, params=params)
+        if response.status_code == 200 and response.text == 'ok':
+            print(f"✅ 成功从Nacos注销服务 {SERVICE_NAME}: {PYTHON_HOST}:{actual_port}")
+        else:
+            print(f"❌ 服务注销失败: {response.status_code} - {response.text}")
+    except Exception as e:
+        print(f"❌ 服务注销失败: {e}")
+
 @app.route('/api/verify', methods=['POST'])
 def verify():
     """人脸验证接口 - 检测单张图片是否有人脸，并自动进行人脸识别"""
@@ -20,8 +113,9 @@ def verify():
             # 处理上传图片
             img = request.files['img']
             # 获取数据库路径，默认使用配置的路径
-            db_path = request.form.get('db_path', 'd:/bianchenglianxi/java/project/face_recognition/python_port/img')
-            
+            db_path = request.form.get('db_path', config.get('database.root-path',
+                                                             'd:/bianchenglianxi/java/project/face_recognition/python_port/img'))
+
             # 保存图片到临时目录
             img_path = os.path.join(app.config['UPLOAD_FOLDER'], img.filename)
             img.save(img_path)
@@ -84,8 +178,8 @@ def verify():
             data = request.get_json()
             img_path = data.get('img_path')
             # 获取数据库路径，默认使用配置的路径
-            db_path = data.get('db_path', 'd:/bianchenglianxi/java/project/face_recognition/python_port/img')
-            
+            db_path = data.get('db_path', config.get('database.root-path',
+                                                     'd:/bianchenglianxi/java/project/face_recognition/python_port/img'))
             if not img_path:
                 return jsonify({"error": "Missing required parameters"}), 400
             
@@ -219,6 +313,30 @@ def find():
         return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
-    port = config.get('python.port', 5000)
-    host = config.get('python.host', '0.0.0.0')
-    app.run(debug=True, host=host, port=port)
+    # 使用Flask的默认方式启动服务器，并通过装饰器获取实际端口
+    def get_real_port():
+        """获取Flask应用的实际端口"""
+        import socket
+        
+        # 创建一个临时socket来获取可用端口
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.bind((PYTHON_HOST, 0))  # 绑定到0端口，会随机分配
+        _, real_port = s.getsockname()
+        s.close()
+        return real_port
+    
+    try:
+        # 获取实际使用的端口（如果配置为0，会随机分配）
+        real_port = PYTHON_CONFIG_PORT if PYTHON_CONFIG_PORT != 0 else get_real_port()
+        
+        # 注册服务到Nacos（使用实际端口）
+        register_service(real_port)
+        
+        # 启动Flask应用
+        print(f"🚀 Flask应用启动中... {PYTHON_HOST}:{real_port}")
+        app.run(debug=True, host=PYTHON_HOST, port=real_port)
+    except KeyboardInterrupt:
+        print("\n👋 应用正在关闭...")
+    finally:
+        # 从Nacos注销服务
+        deregister_service()

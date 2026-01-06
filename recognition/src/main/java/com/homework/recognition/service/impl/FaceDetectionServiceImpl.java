@@ -1,8 +1,11 @@
 package com.homework.recognition.service.impl;
 
 import com.homework.common.feign.PythonPortClient;
+import com.homework.common.feign.VoiceSynthesisClient;
 import com.homework.recognition.config.FaceRecognitionConfig;
 import com.homework.recognition.config.PythonServiceConfig;
+import com.homework.recognition.domain.entity.FaceRecognitionLog;
+import com.homework.recognition.service.AttendanceService;
 import com.homework.recognition.service.FaceDetectionService;
 import com.github.sarxos.webcam.Webcam;
 import org.slf4j.Logger;
@@ -10,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import java.util.concurrent.CompletableFuture;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -34,15 +38,27 @@ public class FaceDetectionServiceImpl implements FaceDetectionService {
     private final PythonPortClient pythonPortClient;
     private final FaceRecognitionConfig faceRecognitionConfig;
     private final PythonServiceConfig pythonServiceConfig;
+    private final AttendanceService attendanceService;
+    private final VoiceSynthesisClient voiceSynthesisClient;
 
     // 保存最近识别到的名字
     private String recognizedName;
+    
+    // 自动检测开关
+    private boolean detectionEnabled = false;
+    
+    // 识别结果保存开关
+    private boolean saveResultEnabled = true;
 
     @Autowired
-    public FaceDetectionServiceImpl(PythonPortClient pythonPortClient, FaceRecognitionConfig faceRecognitionConfig, PythonServiceConfig pythonServiceConfig) {
+    public FaceDetectionServiceImpl(PythonPortClient pythonPortClient, FaceRecognitionConfig faceRecognitionConfig, 
+                                  PythonServiceConfig pythonServiceConfig, AttendanceService attendanceService,
+                                  VoiceSynthesisClient voiceSynthesisClient) {
         this.pythonPortClient = pythonPortClient;
         this.faceRecognitionConfig = faceRecognitionConfig;
         this.pythonServiceConfig = pythonServiceConfig;
+        this.attendanceService = attendanceService;
+        this.voiceSynthesisClient = voiceSynthesisClient;
         this.recognizedName = null;
     }
 
@@ -53,6 +69,11 @@ public class FaceDetectionServiceImpl implements FaceDetectionService {
     @Scheduled(fixedRateString = "${face.detection.interval}")
     @Override
     public Map<String, Object> realTimeFaceDetection() {
+        // 只有当自动检测开关开启时才执行
+        if (!detectionEnabled) {
+            return null;
+        }
+        
         try {
             log.info("开始实时人脸检测");
             
@@ -66,7 +87,14 @@ public class FaceDetectionServiceImpl implements FaceDetectionService {
             log.info("人脸验证和识别结果：{}", verificationResult);
             
             // 3. 处理验证和识别结果
-            return handleVerificationResult(verificationResult);
+            Map<String, Object> result = handleVerificationResult(verificationResult, photoPath);
+            
+            // 4. 保存识别日志
+            if (saveResultEnabled) {
+                saveRecognitionLog(verificationResult, photoPath, result);
+            }
+            
+            return result;
             
         } catch (Exception e) {
             log.error("实时人脸检测失败：{}", e.getMessage(), e);
@@ -188,14 +216,16 @@ public class FaceDetectionServiceImpl implements FaceDetectionService {
      * 处理验证和识别结果
      *
      * @param verificationResult 验证和识别结果
+     * @param photoPath 照片路径
      * @return 包含结果代码和识别信息的Map
      */
-    private Map<String, Object> handleVerificationResult(Map<String, Object> verificationResult) {
+    private Map<String, Object> handleVerificationResult(Map<String, Object> verificationResult, String photoPath) {
         // 这里可以根据识别结果进行后续处理
         // 例如：更新用户状态、记录识别日志、触发相关业务逻辑等
         log.info("处理验证和识别结果：{}", verificationResult);
         
         Map<String, Object> result = new HashMap<>();
+        String speakText = "";
         
         // 处理不同的状态
         String status = (String) verificationResult.get("status");
@@ -218,6 +248,13 @@ public class FaceDetectionServiceImpl implements FaceDetectionService {
                     
                     result.put("code", 1);
                     result.put("name", recognizedName);
+                    
+                    // 保存成功照片到指定目录
+                    saveSuccessPhoto(photoPath, recognizedName);
+                    
+                    // 设置成功语音播报内容
+                    speakText = String.format("欢迎%s，识别成功", recognizedName);
+                    
                     // TODO: 执行识别成功后的业务逻辑，例如记录考勤、开门等
                     break;
 
@@ -225,12 +262,20 @@ public class FaceDetectionServiceImpl implements FaceDetectionService {
                     // 存在人脸但不在名单中
                     log.info("检测到人脸但不在数据库中");
                     result.put("code", 2);
+                    
+                    // 保存失败照片到指定目录
+                    saveFailPhoto(photoPath, "unknown_face");
+                    
+                    // 设置失败语音播报内容
+                    speakText = "抱歉，未识别到您的信息，请勿进入";
+                    
                     // TODO: 执行未知人脸的业务逻辑，例如记录异常、报警等
                     break;
                 case "no_face":
                     // 没有检测到人脸
                     log.info("没有检测到人脸");
                     result.put("code", 3);
+                    // 无语音播报
                     // TODO: 执行未检测到人脸的业务逻辑，例如继续检测等
                     break;
 
@@ -238,12 +283,181 @@ public class FaceDetectionServiceImpl implements FaceDetectionService {
                     // 未知状态
                     log.warn("未知的验证状态：{}", status);
                     result.put("code", 4);
+                    // 设置未知状态语音播报内容
+                    speakText = "识别失败，请重试";
                     break;
 
             }
         } else {
             result.put("code", 4);
+            // 设置未知状态语音播报内容
+            speakText = "识别失败，请重试";
         }
+        
+        // 异步调用语音合成服务，避免阻塞主线程
+        if (!speakText.isEmpty()) {
+            String finalSpeakText = speakText;
+            CompletableFuture.runAsync(() -> {
+                try {
+                    voiceSynthesisClient.speak(finalSpeakText);
+                    log.info("语音播报完成：{}", finalSpeakText);
+                } catch (Exception e) {
+                    log.error("语音播报失败：{}", e.getMessage(), e);
+                }
+            });
+        }
+        
         return result;
+    }
+    
+    /**
+     * 保存识别日志
+     *
+     * @param verificationResult 验证结果
+     * @param photoPath 照片路径
+     * @param result 处理结果
+     */
+    private void saveRecognitionLog(Map<String, Object> verificationResult, String photoPath, Map<String, Object> result) {
+        try {
+            FaceRecognitionLog recognitionLog = new FaceRecognitionLog(); // 重命名变量
+
+            // 设置识别状态
+            recognitionLog.setStatus((String) verificationResult.get("status"));
+
+            // 设置识别到的姓名
+            recognitionLog.setRecognizedName((String) result.get("name"));
+
+            // 设置照片路径
+            recognitionLog.setPhotoPath(photoPath);
+
+            // 设置置信度
+            if (verificationResult.containsKey("confidence")) {
+                recognitionLog.setConfidence(Double.parseDouble(verificationResult.get("confidence").toString()));
+            }
+
+            // 设置人脸数量
+            if (verificationResult.containsKey("face_count")) {
+                recognitionLog.setFaceCount(Integer.parseInt(verificationResult.get("face_count").toString()));
+            }
+
+            // 保存日志
+            attendanceService.saveRecognitionLog(recognitionLog);
+
+
+            log.info("保存人脸识别人物识别日志成功：{}", recognitionLog.getLogId());
+        } catch (Exception e) {
+            log.error("保存人脸识别人物识别日志失败：{}", e.getMessage(), e);
+        }
+    }
+    
+    /**
+     * 保存成功照片到指定目录
+     *
+     * @param originalPath 原始照片路径
+     * @param name 识别到的姓名
+     */
+    private void saveSuccessPhoto(String originalPath, String name) {
+        try {
+            // 获取成功照片保存路径
+            String successPath = faceRecognitionConfig.getSuccessPhotoPath();
+            if (successPath == null || successPath.isEmpty()) {
+                log.warn("未配置成功照片保存路径，跳过保存");
+                return;
+            }
+            
+            // 确保保存目录存在
+            Path saveDir = Paths.get(successPath);
+            if (!Files.exists(saveDir)) {
+                Files.createDirectories(saveDir);
+            }
+            
+            // 生成新的文件名：当前时间_姓名.jpg
+            String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmssSSS"));
+            String fileName = timestamp + "_" + name + ".jpg";
+            Path targetPath = saveDir.resolve(fileName);
+            
+            // 复制文件
+            Files.copy(Paths.get(originalPath), targetPath);
+            
+            log.info("保存识别成功照片到：{}", targetPath.toString());
+        } catch (IOException e) {
+            log.error("保存识别成功照片失败：{}", e.getMessage(), e);
+        }
+    }
+    
+    /**
+     * 保存失败照片到指定目录
+     *
+     * @param originalPath 原始照片路径
+     * @param status 识别状态
+     */
+    private void saveFailPhoto(String originalPath, String status) {
+        try {
+            // 获取失败照片保存路径
+            String failPath = faceRecognitionConfig.getFailPhotoPath();
+            if (failPath == null || failPath.isEmpty()) {
+                log.warn("未配置失败照片保存路径，跳过保存");
+                return;
+            }
+            
+            // 确保保存目录存在
+            Path saveDir = Paths.get(failPath);
+            if (!Files.exists(saveDir)) {
+                Files.createDirectories(saveDir);
+            }
+            
+            // 生成新的文件名：当前时间_状态.jpg
+            String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmssSSS"));
+            String fileName = timestamp + "_" + status + ".jpg";
+            Path targetPath = saveDir.resolve(fileName);
+            
+            // 复制文件
+            Files.copy(Paths.get(originalPath), targetPath);
+            
+            log.info("保存识别失败照片到：{}", targetPath.toString());
+        } catch (IOException e) {
+            log.error("保存识别失败照片失败：{}", e.getMessage(), e);
+        }
+    }
+    
+    /**
+     * 开启自动检测
+     */
+    public void startDetection() {
+        this.detectionEnabled = true;
+        log.info("自动检测已开启");
+    }
+    
+    /**
+     * 停止自动检测
+     */
+    public void stopDetection() {
+        this.detectionEnabled = false;
+        log.info("自动检测已停止");
+    }
+    
+    /**
+     * 获取自动检测状态
+     *
+     * @return 自动检测状态
+     */
+    public boolean getDetectionStatus() {
+        return this.detectionEnabled;
+    }
+    
+    /**
+     * 开启识别结果保存
+     */
+    public void enableSaveResult() {
+        this.saveResultEnabled = true;
+        log.info("识别结果保存已开启");
+    }
+    
+    /**
+     * 关闭识别结果保存
+     */
+    public void disableSaveResult() {
+        this.saveResultEnabled = false;
+        log.info("识别结果保存已关闭");
     }
 }

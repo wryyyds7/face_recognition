@@ -5,7 +5,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>4.0.1</version>
+        <version>3.2.1</version>
 
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
@@ -46,10 +46,7 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-jdbc</artifactId>
         </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-data-jpa</artifactId>
-        </dependency>
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
@@ -207,11 +204,7 @@
             <!--                <version>${springcloud.common.version}</version> &lt;!&ndash; 使用与您的Spring Cloud版本兼容的版本 &ndash;&gt;-->
             <!--            </dependency>-->
 
-            <dependency>
-                <groupId>org.springframework.cloud</groupId>
-                <artifactId>spring-cloud-starter-bootstrap</artifactId>
-                <version>${bootstrap.version}</version>
-            </dependency>
+            <!-- Spring Cloud Bootstrap has been deprecated in Spring Cloud 2022.0+, bootstrap functionality is now included in spring-cloud-starter -->
 
             <dependency>
                 <groupId>org.apache.commons</groupId>

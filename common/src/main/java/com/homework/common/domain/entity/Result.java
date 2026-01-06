@@ -47,6 +47,10 @@ public class Result {
     {
         return new Result(200, "success", data);
     }
+    public static Result success(String message, Object data)
+    {
+        return new Result(200, message, data);
+    }
 
     public static Result error(String data)
     {

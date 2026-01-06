@@ -4,10 +4,27 @@ server:
 spring:
   application:
     name: recognition
+  config:
+    import: optional:nacos
   cloud:
     nacos:
       discovery:
         server-addr: localhost:8848
+      config:
+        import-check:
+          enabled: false
+  datasource:
+    url: jdbc:mysql://localhost:3306/face?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+    username: root
+    password: root
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 5
+      minimum-idle: 2
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+
   servlet:
     multipart:
       # 从共享配置文件读取：config/config.yml -> upload.max-file-size
@@ -34,12 +51,17 @@ face:
   detection:
     # 检测间隔（毫秒） - 从共享配置文件读取：config/config.yml -> detection.interval
     interval: 5000
+    photo-path: d:/bianchenglianxi/java/project/face_recognition/python_port/uploads
+    success-photo-path: d:/bianchenglianxi/java/project/face_recognition/python_port/uploads/photos/success
+    fail-photo-path: d:/bianchenglianxi/java/project/face_recognition/python_port/uploads/photos/fail
 
 # 日志配置
 logging:
   level:
     com.example.recognition: info
     com.example.common.feign: debug
+
+
 
 # Swagger配置
 swagger:

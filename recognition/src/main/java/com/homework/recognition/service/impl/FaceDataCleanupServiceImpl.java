@@ -41,7 +41,7 @@ public class FaceDataCleanupServiceImpl implements FaceDataCleanupService {
     @Scheduled(fixedRateString = "${python.port.cleanup-interval}")
     @Override
     public void executeAllCleanup() {
-        log.info("开始执行全部人脸数据清理操作");
+        log.info("开始执行全部人脸数据清理操作,当前时间为"+LocalDateTime.now());
         
         // 1. 清理Python服务的临时文件
         cleanupTempFiles();
@@ -52,7 +52,7 @@ public class FaceDataCleanupServiceImpl implements FaceDataCleanupService {
         // 3. 清理过期的人脸数据
         cleanupExpiredFaceData();
         
-        log.info("全部人脸数据清理操作执行完成");
+        log.info("全部人脸数据清理操作执行完成,当前时间为"+LocalDateTime.now());
     }
 
     /**

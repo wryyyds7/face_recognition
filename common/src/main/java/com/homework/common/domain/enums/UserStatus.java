@@ -17,6 +17,10 @@ public enum UserStatus {
      * @return
      */
     public static UserStatus valueOfCode(String code) {
+        if (code == null || code.isEmpty()) {
+            // 默认返回启用状态
+            return ENABLE;
+        }
         for (UserStatus status : values()) {
             if (status.getCode().equals(code)) {
                 return status;

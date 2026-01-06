@@ -1,0 +1,12 @@
+com\homework\recognition\service\UserFaceService.class
+com\homework\recognition\service\impl\FaceDataCleanupServiceImpl.class
+com\homework\recognition\config\FaceRecognitionConfig.class
+com\homework\recognition\service\impl\UserFaceServiceImpl.class
+com\homework\recognition\service\FaceDataCleanupService.class
+com\homework\recognition\config\PythonServiceConfig.class
+com\homework\recognition\service\impl\FaceDetectionServiceImpl.class
+com\homework\recognition\mapper\AttendanceRecordMapper.class
+com\homework\recognition\controller\FaceRecognitionController.class
+com\homework\recognition\service\FaceDetectionService.class
+com\homework\recognition\mapper\FaceRecognitionLogMapper.class
+com\homework\recognition\RecognitionApplication.class

@@ -2,11 +2,14 @@ package com.homework.common;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cloud.autoconfigure.LifecycleMvcEndpointAutoConfiguration;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.context.annotation.ComponentScan;
 
 @EnableFeignClients(basePackages = "com.homework.common.feign")
-@SpringBootApplication
+@SpringBootApplication(exclude = {
+    LifecycleMvcEndpointAutoConfiguration.class
+})
 @ComponentScan(basePackages = "com.homework")
 public class CommonApplication {
 

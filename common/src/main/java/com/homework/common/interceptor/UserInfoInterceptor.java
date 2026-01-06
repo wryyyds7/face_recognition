@@ -44,7 +44,8 @@ public class UserInfoInterceptor implements HandlerInterceptor{
                 "/in/**",
                 "/actuator/**",
                 "/swagger-ui/**",
-                "/v3/api-docs/**"
+                "/v3/api-docs/**",
+                "/error"
         );
         
         // 检查请求路径是否在白名单中

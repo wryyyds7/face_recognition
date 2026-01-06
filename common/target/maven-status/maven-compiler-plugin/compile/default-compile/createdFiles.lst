@@ -87,6 +87,7 @@ com\homework\common\domain\entity\BoChaResult\Images.class
 com\homework\common\domain\entity\EnterpriseInfo.class
 com\homework\common\exception\GlobalException.class
 com\homework\common\domain\enums\EnterpriseClassification.class
+com\homework\common\feign\VoiceSynthesisClient.class
 com\homework\common\service\impl\UploadServiceImpl.class
 com\homework\common\domain\entity\Enterprise$EnterpriseBuilder.class
 com\homework\common\domain\dto\LearningPathRecommendationResponseDTO$LearningPathData.class

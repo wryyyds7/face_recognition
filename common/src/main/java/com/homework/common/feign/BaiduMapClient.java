@@ -2,6 +2,7 @@ package com.homework.common.feign;
 
 import com.homework.common.constant.APIConstant;
 import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
@@ -11,6 +12,7 @@ import java.util.Map;
  * 百度地图API Feign客户端
  * 用于调用百度地图的IP定位接口
  */
+@Component
 @FeignClient(name = "baiduMap", url = "https://api.map.baidu.com")
 public interface BaiduMapClient {
 

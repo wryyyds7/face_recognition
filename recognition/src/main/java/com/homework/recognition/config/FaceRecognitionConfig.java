@@ -21,6 +21,16 @@ public class FaceRecognitionConfig {
      */
     private String photoPath;
 
+    /**
+     * 识别成功照片保存路径
+     */
+    private String successPhotoPath;
+
+    /**
+     * 识别失败照片保存路径
+     */
+    private String failPhotoPath;
+
     public long getInterval() {
         return interval;
     }
@@ -35,5 +45,21 @@ public class FaceRecognitionConfig {
 
     public void setPhotoPath(String photoPath) {
         this.photoPath = photoPath;
+    }
+
+    public String getSuccessPhotoPath() {
+        return successPhotoPath;
+    }
+
+    public void setSuccessPhotoPath(String successPhotoPath) {
+        this.successPhotoPath = successPhotoPath;
+    }
+
+    public String getFailPhotoPath() {
+        return failPhotoPath;
+    }
+
+    public void setFailPhotoPath(String failPhotoPath) {
+        this.failPhotoPath = failPhotoPath;
     }
 }

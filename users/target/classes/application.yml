@@ -1,0 +1,52 @@
+server:
+  port: 0
+
+spring:
+  security:
+    enabled: false
+  datasource:
+    url: jdbc:mysql://localhost:3306/face_recognition?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+    username: root
+    password: root
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 5
+      minimum-idle: 2
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+  application:
+    name: users
+  config:
+    import: optional:nacos
+  cloud:
+    nacos:
+      discovery:
+        server-addr: localhost:8848
+      config:
+        import-check:
+          enabled: false
+  main:
+    allow-bean-definition-overriding: true
+
+# 语音合成配置
+voice:
+  synthesis:
+    # 默认音量（0-100）
+    volume: 80
+    # 默认语速（-10到+10）
+    rate: 0
+    # 默认音色类型（female/male）
+    default-voice-type: female
+
+# 日志配置
+logging:
+  level:
+    com.homework.voicesynthesis: info
+
+# Swagger配置
+swagger:
+  base-package: com.homework.users.controller
+  title: 用户服务API
+  description: 用户服务接口文档
+  version: 1.0.0

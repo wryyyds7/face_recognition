@@ -1,0 +1,8 @@
+com\homework\gateway\config\AuthProperties.class
+com\homework\gateway\config\JwtPreperties.class
+com\homework\gateway\GatewayApplication.class
+com\homework\gateway\filter\EnterpriseGlobalFilter.class
+com\homework\gateway\filter\JwtAuthenticationFilter.class
+com\homework\gateway\filter\AuthGatewayFilter$Config.class
+com\homework\gateway\config\SecurityConfig.class
+com\homework\gateway\filter\AuthGatewayFilter.class

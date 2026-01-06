@@ -65,6 +65,16 @@ public class User extends BaseEntity{
     /** 角色ID */
     private Long roleId;
 
+    private String avatarPath;
+
+    public String getAvatarPath() {
+        return avatarPath;
+    }
+
+    public void setAvatarPath(String avatarPath) {
+        this.avatarPath = avatarPath;
+    }
+
     public User() {
     }
 
@@ -95,6 +105,30 @@ public class User extends BaseEntity{
         this.roleIds = roleIds;
         this.postIds = postIds;
         this.roleId = roleId;
+    }
+
+    public User(Long userId, Long deptId, String userName, String nickName, String userType, String email, String phonenumber, String sex, String avatar, String password, UserStatus status, String delFlag, String loginIp, String loginLocation, Date loginDate, Date pwdUpdateDate, List<Role> roles, Long[] roleIds, Long[] postIds, Long roleId, String avatarPath) {
+        this.userId = userId;
+        this.deptId = deptId;
+        this.userName = userName;
+        this.nickName = nickName;
+        this.userType = userType;
+        this.email = email;
+        this.phonenumber = phonenumber;
+        this.sex = sex;
+        this.avatar = avatar;
+        this.password = password;
+        this.status = status;
+        this.delFlag = delFlag;
+        this.loginIp = loginIp;
+        this.loginLocation = loginLocation;
+        this.loginDate = loginDate;
+        this.pwdUpdateDate = pwdUpdateDate;
+        this.roles = roles;
+        this.roleIds = roleIds;
+        this.postIds = postIds;
+        this.roleId = roleId;
+        this.avatarPath = avatarPath;
     }
 
     public String getLoginLocation() {
