@@ -1,0 +1,21 @@
+# Maven
+target/
+*/target/
+
+# IDE
+.idea/
+*.iml
+*.iws
+*.ipr
+.DS_Store
+
+# Logs
+logs/
+*.log
+*.log.*
+
+# Other
+*.jar
+*.war
+*.nar
+*.ear
