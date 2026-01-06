@@ -14,7 +14,7 @@ spring:
         import-check:
           enabled: false
   datasource:
-    url: jdbc:mysql://localhost:3306/face?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+    url: jdbc:mysql://localhost:3306/face_recognition?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
     username: root
     password: root
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -52,8 +52,8 @@ face:
     # 检测间隔（毫秒） - 从共享配置文件读取：config/config.yml -> detection.interval
     interval: 5000
     photo-path: d:/bianchenglianxi/java/project/face_recognition/python_port/uploads
-    success-photo-path: d:/bianchenglianxi/java/project/face_recognition/python_port/uploads/photos/success
-    fail-photo-path: d:/bianchenglianxi/java/project/face_recognition/python_port/uploads/photos/fail
+    success-photo-path: d:/bianchenglianxi/java/project/face_recognition/python_port/photos/success
+    fail-photo-path: d:/bianchenglianxi/java/project/face_recognition/python_port/photos/fail
 
 # 日志配置
 logging:

@@ -4,6 +4,7 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.multipart.MultipartFile;
@@ -22,39 +23,48 @@ public interface PythonPortClient {
      * 检测单张图片是否有人脸
      *
      * @param request 请求参数，包含img_path
+     * @param token Authorization头，自动从UserContext获取
      * @return 验证结果
      */
     @PostMapping(value = "/api/verify", consumes = MediaType.APPLICATION_JSON_VALUE)
-    Map<String, Object> verifyByPath(@RequestBody Map<String, String> request);
+    Map<String, Object> verifyByPath(@RequestBody Map<String, String> request,
+                                    @RequestHeader(name = "Authorization", defaultValue = "#{T(com.homework.common.domain.entity.UserContext).getToken()}", required = false) String token);
 
     /**
      * 人脸验证接口 - 通过文件上传调用
      * 检测单张图片是否有人脸
      *
      * @param img 待检测图片
+     * @param token Authorization头，自动从UserContext获取
      * @return 验证结果
      */
     @PostMapping(value = "/api/verify", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    Map<String, Object> verifyByFile(@RequestPart("img") MultipartFile img);
+    Map<String, Object> verifyByFile(@RequestPart("img") MultipartFile img,
+                                    @RequestHeader(name = "Authorization", defaultValue = "#{T(com.homework.common.domain.entity.UserContext).getToken()}", required = false) String token);
 
     /**
      * 人脸识别接口 - 通过路径调用
      *
      * @param request 请求参数，包含img_path和db_path
+     * @param token Authorization头，自动从UserContext获取
      * @return 识别结果
      */
     @PostMapping(value = "/api/find", consumes = MediaType.APPLICATION_JSON_VALUE)
-    Map<String, Object> findByPath(@RequestBody Map<String, String> request);
+    Map<String, Object> findByPath(@RequestBody Map<String, String> request,
+                                  @RequestHeader(name = "Authorization", defaultValue = "#{T(com.homework.common.domain.entity.UserContext).getToken()}", required = false) String token);
 
     /**
      * 人脸识别接口 - 通过文件上传调用
      *
      * @param img 待识别图片
      * @param dbPath 数据库路径
+     * @param token Authorization头，自动从UserContext获取
      * @return 识别结果
      */
     @PostMapping(value = "/api/find", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    Map<String, Object> findByFile(@RequestPart("img") MultipartFile img, @RequestParam("db_path") String dbPath);
+    Map<String, Object> findByFile(@RequestPart("img") MultipartFile img, 
+                                  @RequestParam("db_path") String dbPath,
+                                  @RequestHeader(name = "Authorization", defaultValue = "#{T(com.homework.common.domain.entity.UserContext).getToken()}", required = false) String token);
 
     /**
      * 默认方法，简化人脸验证调用（通过路径）
@@ -66,7 +76,7 @@ public interface PythonPortClient {
     default Map<String, Object> verify(String imgPath) {
         Map<String, String> request = new java.util.HashMap<>();
         request.put("img_path", imgPath);
-        return verifyByPath(request);
+        return verifyByPath(request, null);
     }
 
     /**
@@ -80,6 +90,6 @@ public interface PythonPortClient {
         Map<String, String> request = new java.util.HashMap<>();
         request.put("img_path", imgPath);
         request.put("db_path", dbPath);
-        return findByPath(request);
+        return findByPath(request, null);
     }
 }

@@ -66,11 +66,48 @@ def deepface_model_find(img: str, db: str, model_name=models_name[1]):
     :param model_name:
     :return:
     """
+    import glob
+    import os
+    all_files = glob.glob(os.path.join(db, "**", "*.*"), recursive=True)
+    print(f"🔍 DeepFace扫描数据库: {db}")
+    print(f"📁 总文件数: {len(all_files)}")
+    # 过滤出图像文件
+    image_extensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp']
+    image_files = [f for f in all_files if os.path.splitext(f)[1].lower() in image_extensions]
+    print(f"🖼️  图像文件数: {len(image_files)}")
+    import pandas as pd
     dfs = DeepFace.find(
         img_path=img,
-        db_path=db
+        db_path=db,
+        model_name=model_name,
+        enforce_detection=False,
+        silent=True
     )
-    return dfs
+    print("find方法已通过")
+    # 修复DataFrame结构，确保值和索引长度匹配
+    fixed_dfs = []
+    for df in dfs:
+        if not df.empty:
+            try:
+                # 检查DataFrame结构
+                if all(col in df.columns for col in ['distance', 'threshold', 'identity']):
+                    # 重新索引DataFrame，确保值和索引长度匹配
+                    # 只保留有效的行
+                    fixed_df = df.dropna(subset=['distance', 'threshold', 'identity'])
+                    # 重置索引
+                    fixed_df = fixed_df.reset_index(drop=True)
+                    fixed_dfs.append(fixed_df)
+                else:
+                    print(f"⚠️ 跳过无效的DataFrame，缺少必要列: {df.columns.tolist()}")
+            except Exception as e:
+                print(f"⚠️ 修复DataFrame失败: {e}")
+                # 如果修复失败，创建一个空的有效DataFrame
+                empty_df = pd.DataFrame(columns=['distance', 'threshold', 'identity'])
+                fixed_dfs.append(empty_df)
+        else:
+            fixed_dfs.append(df)
+    
+    return fixed_dfs
 
 
 # 人脸识别模型 - 人脸属性分析 - Face analyze

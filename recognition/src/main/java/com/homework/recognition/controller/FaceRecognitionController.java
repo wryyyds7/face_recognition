@@ -44,7 +44,7 @@ public class FaceRecognitionController extends BaseController {
     public Result manualDetect() {
         try {
             log.info("手动触发实时人脸检测");
-            Map<String, Object> resultMap = faceDetectionService.realTimeFaceDetection();
+            Map<String, Object> resultMap = faceDetectionService.singleDetect();
             Integer code = (Integer) resultMap.get("code");
             
             switch (code) {

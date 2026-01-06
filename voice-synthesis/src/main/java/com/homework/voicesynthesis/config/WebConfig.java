@@ -28,6 +28,7 @@ public class WebConfig implements WebMvcConfigurer {
                 .addPathPatterns("/**")
 
                 .excludePathPatterns("/in/**")
+                .excludePathPatterns("/voice/**")
                 .excludePathPatterns("/ai/api/spark/**"); // 排除AI相关接口
             }
 }

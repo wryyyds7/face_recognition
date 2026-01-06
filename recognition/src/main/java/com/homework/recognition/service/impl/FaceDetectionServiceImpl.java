@@ -121,7 +121,7 @@ public class FaceDetectionServiceImpl implements FaceDetectionService {
             request.put("img_path", imgPath);
             
             // 调用Python服务
-            Map<String, Object> result = pythonPortClient.verifyByPath(request);
+            Map<String, Object> result = pythonPortClient.verifyByPath(request, null);
             log.info("人脸验证结果：{}", result);
             
             return result;
@@ -148,7 +148,8 @@ public class FaceDetectionServiceImpl implements FaceDetectionService {
             request.put("db_path", pythonServiceConfig.getDbPath());
             
             // 调用Python服务
-            Map<String, Object> result = pythonPortClient.findByPath(request);
+            // 传入null表示使用默认的参数
+            Map<String, Object> result = pythonPortClient.findByPath(request, null);
             log.info("人脸识别结果：{}", result);
             
             return result;
@@ -236,13 +237,18 @@ public class FaceDetectionServiceImpl implements FaceDetectionService {
                     String identity = (String) verificationResult.get("identity");
                     log.info("人脸识别成功，匹配到身份：{}", identity);
                     
-                    // 从文件名中提取用户名（去掉后缀）
+                    // 从文件名中提取用户名（去掉完整路径和后缀）
                     if (identity != null) {
-                        int lastDotIndex = identity.lastIndexOf('.');
+                        // 先提取文件名（去掉路径）
+                        java.io.File identityFile = new java.io.File(identity);
+                        String baseName = identityFile.getName();
+                        
+                        // 再去掉后缀
+                        int lastDotIndex = baseName.lastIndexOf('.');
                         if (lastDotIndex > 0) {
-                            recognizedName = identity.substring(0, lastDotIndex);
+                            recognizedName = baseName.substring(0, lastDotIndex);
                         } else {
-                            recognizedName = identity;
+                            recognizedName = baseName;
                         }
                     }
                     
@@ -299,7 +305,7 @@ public class FaceDetectionServiceImpl implements FaceDetectionService {
             String finalSpeakText = speakText;
             CompletableFuture.runAsync(() -> {
                 try {
-                    voiceSynthesisClient.speak(finalSpeakText);
+                    voiceSynthesisClient.speak(finalSpeakText, null);
                     log.info("语音播报完成：{}", finalSpeakText);
                 } catch (Exception e) {
                     log.error("语音播报失败：{}", e.getMessage(), e);
@@ -374,7 +380,9 @@ public class FaceDetectionServiceImpl implements FaceDetectionService {
             // 生成新的文件名：当前时间_姓名.jpg
             String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmssSSS"));
             String fileName = timestamp + "_" + name + ".jpg";
-            Path targetPath = saveDir.resolve(fileName);
+            // 清理文件名，移除Windows文件系统不允许的字符
+            String cleanFileName = fileName.replaceAll("[<>:\"/\\|?*]", "_");
+            Path targetPath = saveDir.resolve(cleanFileName);
             
             // 复制文件
             Files.copy(Paths.get(originalPath), targetPath);
@@ -409,7 +417,9 @@ public class FaceDetectionServiceImpl implements FaceDetectionService {
             // 生成新的文件名：当前时间_状态.jpg
             String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmssSSS"));
             String fileName = timestamp + "_" + status + ".jpg";
-            Path targetPath = saveDir.resolve(fileName);
+            // 清理文件名，移除Windows文件系统不允许的字符
+            String cleanFileName = fileName.replaceAll("[<>:\"/\\|?*]", "_");
+            Path targetPath = saveDir.resolve(cleanFileName);
             
             // 复制文件
             Files.copy(Paths.get(originalPath), targetPath);
@@ -459,5 +469,40 @@ public class FaceDetectionServiceImpl implements FaceDetectionService {
     public void disableSaveResult() {
         this.saveResultEnabled = false;
         log.info("识别结果保存已关闭");
+    }
+    
+    /**
+     * 单次人脸检测
+     * 仅执行一次人脸检测和识别，不依赖自动检测开关
+     */
+    @Override
+    public Map<String, Object> singleDetect() {
+        try {
+            log.info("开始单次人脸检测");
+            
+            // 1. 拍照并保存
+            String photoPath = takePhoto();
+            log.info("拍照成功，保存路径：{}", photoPath);
+            
+            // 2. 发送到Python服务进行人脸验证和识别
+            Map<String, Object> verificationResult = verifyFace(photoPath);
+            log.info("人脸验证和识别结果：{}", verificationResult);
+            
+            // 3. 处理验证和识别结果
+            Map<String, Object> result = handleVerificationResult(verificationResult, photoPath);
+            
+            // 4. 保存识别日志
+            if (saveResultEnabled) {
+                saveRecognitionLog(verificationResult, photoPath, result);
+            }
+            
+            return result;
+            
+        } catch (Exception e) {
+            log.error("单次人脸检测失败：{}", e.getMessage(), e);
+            Map<String, Object> result = new HashMap<>();
+            result.put("code", 5);
+            return result;
+        }
     }
 }

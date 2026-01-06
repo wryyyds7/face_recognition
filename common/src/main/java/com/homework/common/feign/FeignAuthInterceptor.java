@@ -16,7 +16,7 @@ import java.util.List;
 public class FeignAuthInterceptor implements RequestInterceptor {
 
     // 需要跳过token添加的服务名称列表
-    private static final List<String> SKIP_TOKEN_SERVICES = Arrays.asList("baiduMap", "BoChaSearchEngine", "ipify", "voice-synthesis");
+    private static final List<String> SKIP_TOKEN_SERVICES = Arrays.asList("baiduMap", "BoChaSearchEngine", "ipify");
     
     @Override
     public void apply(RequestTemplate requestTemplate) {

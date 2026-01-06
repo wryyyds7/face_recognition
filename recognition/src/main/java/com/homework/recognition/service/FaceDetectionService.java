@@ -39,4 +39,11 @@ public interface FaceDetectionService {
      * @return 照片保存路径
      */
     String takePhoto();
+    
+    /**
+     * 单次人脸检测
+     * 仅执行一次人脸检测和识别，不依赖自动检测开关
+     * @return 包含检测结果和识别信息的Map
+     */
+    Map<String, Object> singleDetect();
 }
