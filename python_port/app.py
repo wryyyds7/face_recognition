@@ -334,7 +334,26 @@ if __name__ == '__main__':
         
         # 启动Flask应用
         print(f"🚀 Flask应用启动中... {PYTHON_HOST}:{real_port}")
-        app.run(debug=True, host=PYTHON_HOST, port=real_port)
+        
+        # 配置Flask，关闭自动重载或调整监听目录
+        # 方案1：关闭调试模式（生产环境推荐）
+        app.run(debug=False, host=PYTHON_HOST, port=real_port)
+        
+        # 方案2：开启调试模式但禁用自动重载（开发环境推荐）
+        # app.run(debug=True, host=PYTHON_HOST, port=real_port, use_reloader=False)
+        
+        # 方案3：使用自定义的文件监视规则
+        # from werkzeug.debug import DebuggedApplication
+        # from werkzeug.serving import run_simple
+        # run_simple(
+        #     PYTHON_HOST, real_port,
+        #     DebuggedApplication(app, True),
+        #     use_reloader=True,
+        #     reloader_options={
+        #         'interval': 3,
+        #         'exclude_patterns': ['*.pyc', '__pycache__', '*.pyo', '.git', 'env', 'venv', 'uploads']
+        #     }
+        # )
     except KeyboardInterrupt:
         print("\n👋 应用正在关闭...")
     finally:
