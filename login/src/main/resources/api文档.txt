@@ -1,0 +1,134 @@
+# 登录服务API文档
+
+## 1. 模块概述
+登录服务提供用户认证、登录、注册、登出等功能。
+
+## 2. 接口列表
+
+### 2.1 用户登录
+- **接口路径**：/in/login
+- **请求方法**：POST
+- **功能描述**：用户登录，获取Token
+- **请求参数**：
+  - userName：用户名（String类型）
+  - password：密码（String类型）
+- **响应结果**：
+  - token：登录Token
+  - expireTime：Token过期时间
+  - userId：用户ID
+  - userName：用户名
+  - roles：用户角色列表
+- **使用示例**：
+  ```
+  POST /in/login
+  Content-Type: application/json
+  
+  {
+    "userName": "admin",
+    "password": "123456"
+  }
+  ```
+- **返回示例**：
+  ```json
+  {
+    "code": 200,
+    "message": "操作成功",
+    "data": {
+      "token": "eyJhbGciOiJIUzI1NiJ9...",
+      "expireTime": 1733568000000,
+      "userId": 1,
+      "userName": "admin",
+      "roles": ["ADMIN"]
+    }
+  }
+  ```
+
+### 2.2 用户注册
+- **接口路径**：/in/register
+- **请求方法**：POST
+- **功能描述**：用户注册
+- **请求参数**：
+  - userName：用户名（String类型）
+  - password：密码（String类型）
+  - email：邮箱（String类型，可选）
+  - phone：手机号（String类型，可选）
+- **响应结果**：
+  - userName：注册成功的用户名
+- **使用示例**：
+  ```
+  POST /in/register
+  Content-Type: application/json
+  
+  {
+    "userName": "user1",
+    "password": "123456",
+    "email": "user1@example.com",
+    "phone": "13800138000"
+  }
+  ```
+- **返回示例**：
+  ```json
+  {
+    "code": 200,
+    "message": "操作成功",
+    "data": "user1"
+  }
+  ```
+
+### 2.3 用户登出
+- **接口路径**：/in/logout
+- **请求方法**：POST
+- **功能描述**：用户登出，将Token加入黑名单
+- **请求参数**：
+  - token：登录Token
+- **响应结果**：
+  - 成功消息
+- **使用示例**：
+  ```
+  POST /in/logout
+  Content-Type: application/json
+  
+  "eyJhbGciOiJIUzI1NiJ9..."
+  ```
+- **返回示例**：
+  ```json
+  {
+    "code": 200,
+    "message": "登出成功",
+    "data": null
+  }
+  ```
+
+### 2.4 刷新Token
+- **接口路径**：/in/refreshToken
+- **请求方法**：POST
+- **功能描述**：刷新Token，获取新的Token
+- **请求参数**：
+  - token：旧的登录Token
+- **响应结果**：
+  - token：新的登录Token
+  - expireTime：新Token过期时间
+  - userId：用户ID
+  - userName：用户名
+  - roles：用户角色列表
+- **使用示例**：
+  ```
+  POST /in/refreshToken
+  Content-Type: application/json
+  
+  "eyJhbGciOiJIUzI1NiJ9..."
+  ```
+- **返回示例**：
+  ```json
+  {
+    "code": 200,
+    "message": "操作成功",
+    "data": {
+      "token": "eyJhbGciOiJIUzI1NiJ9...",
+      "expireTime": 1733568000000,
+      "userId": 1,
+      "userName": "admin",
+      "roles": ["ADMIN"]
+    }
+  }
+  ```

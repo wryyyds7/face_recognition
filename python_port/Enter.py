@@ -128,6 +128,7 @@ def deepface_model_extract(img: str):
     :param img:
     :return:
     """
+    img = cv2.imread(img)
     face_objs = DeepFace.extract_faces(
         img_path=img,
         detector_backend='opencv',

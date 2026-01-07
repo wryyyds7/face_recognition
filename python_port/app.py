@@ -202,16 +202,19 @@ def verify():
             # 处理图片路径
             data = request.get_json()
             img_path = data.get('img_path')
+            # img_path = "D:\\bianchenglianxi\java\project\\face_recognition\python_port\photos\success\\20260106201914079_wry.jpg"
             # 获取数据库路径，默认使用配置的路径
             db_path = data.get('db_path', config.get('database.root-path',
                                                      'd:/bianchenglianxi/java/project/face_recognition/python_port/img'))
+            print("处理图片路径")
             if not img_path:
                 return jsonify({"error": "Missing required parameters"}), 400
-
+            print("处理图片路径——成功")
             # 1. 检测图片是否包含人脸
             face_objs = deepface_model_extract(img_path)
-
+            print("search if the photo has people——检测成功")
             if not face_objs or len(face_objs) == 0:
+                print("没有检测到人脸")
                 return jsonify({"status": "no_face", "message": "No face detected in the image"}), 400
 
             # 2. 检测到人脸，自动进行人脸识别

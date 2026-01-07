@@ -4,8 +4,7 @@ import com.homework.common.controller.BaseController;
 import com.homework.common.domain.entity.Result;
 import com.homework.voicesynthesis.config.VoiceConfig;
 import com.homework.voicesynthesis.service.VoiceService;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,7 +17,6 @@ import org.springframework.web.bind.annotation.*;
  */
 @RestController
 @RequestMapping("/voice")
-@Api(tags = "语音合成管理")
 public class VoiceController extends BaseController {
 
     private static final Logger log = LoggerFactory.getLogger(VoiceController.class);
@@ -39,7 +37,6 @@ public class VoiceController extends BaseController {
      * @return 执行结果
      */
     @PostMapping("/speak")
-    @ApiOperation("语音合成并播放")
     public Result speak(@RequestParam String text) {
         try {
             log.info("语音合成请求: {}", text);
@@ -63,7 +60,6 @@ public class VoiceController extends BaseController {
      * @return 执行结果
      */
     @PostMapping("/speak/voice")
-    @ApiOperation("语音合成并播放（指定音色）")
     public Result speakWithVoice(@RequestParam String text, @RequestParam String voiceType) {
         try {
             log.info("语音合成请求: {}, 音色: {}", text, voiceType);
@@ -89,7 +85,6 @@ public class VoiceController extends BaseController {
      * @return 执行结果
      */
     @PostMapping("/speak/full")
-    @ApiOperation("语音合成并播放（指定音量和语速）")
     public Result speakFull(@RequestParam String text, @RequestParam(required = false) String voiceType,
                            @RequestParam(required = false) Integer volume, @RequestParam(required = false) Integer rate) {
         try {
@@ -117,7 +112,6 @@ public class VoiceController extends BaseController {
      * @return 配置信息
      */
     @GetMapping("/config")
-    @ApiOperation("获取语音合成配置")
     public Result getConfig() {
         try {
             return Result.success(voiceConfig);

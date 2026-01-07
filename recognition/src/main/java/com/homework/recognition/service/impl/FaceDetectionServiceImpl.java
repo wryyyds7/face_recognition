@@ -2,11 +2,15 @@ package com.homework.recognition.service.impl;
 
 import com.homework.common.feign.PythonPortClient;
 import com.homework.common.feign.VoiceSynthesisClient;
+import com.homework.common.domain.entity.User;
+import com.homework.recognition.config.AttendanceConfig;
 import com.homework.recognition.config.FaceRecognitionConfig;
 import com.homework.recognition.config.PythonServiceConfig;
 import com.homework.recognition.domain.entity.FaceRecognitionLog;
 import com.homework.recognition.service.AttendanceService;
 import com.homework.recognition.service.FaceDetectionService;
+import com.homework.users.service.UserService;
+import com.homework.users.domain.dto.SearchUserDTO;
 import com.github.sarxos.webcam.Webcam;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,6 +44,8 @@ public class FaceDetectionServiceImpl implements FaceDetectionService {
     private final PythonServiceConfig pythonServiceConfig;
     private final AttendanceService attendanceService;
     private final VoiceSynthesisClient voiceSynthesisClient;
+    private final UserService userService;
+    private final AttendanceConfig attendanceConfig;
 
     // 保存最近识别到的名字
     private String recognizedName;
@@ -53,12 +59,15 @@ public class FaceDetectionServiceImpl implements FaceDetectionService {
     @Autowired
     public FaceDetectionServiceImpl(PythonPortClient pythonPortClient, FaceRecognitionConfig faceRecognitionConfig, 
                                   PythonServiceConfig pythonServiceConfig, AttendanceService attendanceService,
-                                  VoiceSynthesisClient voiceSynthesisClient) {
+                                  VoiceSynthesisClient voiceSynthesisClient, UserService userService, 
+                                  AttendanceConfig attendanceConfig) {
         this.pythonPortClient = pythonPortClient;
         this.faceRecognitionConfig = faceRecognitionConfig;
         this.pythonServiceConfig = pythonServiceConfig;
         this.attendanceService = attendanceService;
         this.voiceSynthesisClient = voiceSynthesisClient;
+        this.userService = userService;
+        this.attendanceConfig = attendanceConfig;
         this.recognizedName = null;
     }
 
@@ -236,9 +245,12 @@ public class FaceDetectionServiceImpl implements FaceDetectionService {
                     // 识别成功：返回匹配的文件名
                     String identity = (String) verificationResult.get("identity");
                     log.info("人脸识别成功，匹配到身份：{}", identity);
-                    
+                    // 提取用户名和用户ID
+                    String pureName = recognizedName;
+                    Long extractedUserId = null;
                     // 从文件名中提取用户名（去掉完整路径和后缀）
                     if (identity != null) {
+                        System.out.println("identity不为null");
                         // 先提取文件名（去掉路径）
                         java.io.File identityFile = new java.io.File(identity);
                         String baseName = identityFile.getName();
@@ -250,18 +262,108 @@ public class FaceDetectionServiceImpl implements FaceDetectionService {
                         } else {
                             recognizedName = baseName;
                         }
+                        // 从recognizedName中提取用户名和用户ID（格式：name_id）
+                        String[] parts = recognizedName.split("_");
+                        if (parts.length >= 2) {
+                            pureName = parts[0];
+                            try {
+                                extractedUserId = Long.parseLong(parts[1]);
+                                log.info("提取用户名和ID：从{}提取为用户名{}，ID{}", recognizedName, pureName, extractedUserId);
+                            } catch (NumberFormatException e) {
+                                log.warn("无法从{}中提取用户ID，格式不正确，使用用户名查询", recognizedName);
+                            }
+                        }
+                    }
+                    System.out.println("pureName为"+pureName+"\nextractedUserId="+extractedUserId);
+                    result.put("code", 1);
+                    result.put("name", pureName);
+                    
+                    // 根据用户名或提取的用户ID查询用户信息
+                    User user = null;
+                    Long userId = null;
+                    String realName = pureName;
+                    
+                    if (extractedUserId != null) {
+                        // 优先使用提取的用户ID查询
+                        try {
+                            SearchUserDTO searchUserDTO = new SearchUserDTO();
+                            searchUserDTO.setUserId(extractedUserId);
+                            user = userService.searchUser(searchUserDTO);
+                            if (user != null) {
+                                userId = user.getUserId();
+                                // 确保realName不为null，优先使用nickName，否则使用userName，最后使用pureName
+                                realName = user.getNickName() != null ? user.getNickName() : 
+                                          (user.getUserName() != null ? user.getUserName() : pureName);
+                                log.info("根据提取的用户ID{}查询到用户：{}", extractedUserId, user.getUserName());
+                            } else {
+                                log.warn("根据提取的用户ID{}未找到用户，回退到用户名查询", extractedUserId);
+                                // 回退到用户名查询
+                                user = userService.findByUserName(pureName);
+                                userId = user != null ? user.getUserId() : null;
+                                // 确保realName不为null
+                                realName = user != null ? 
+                                          (user.getNickName() != null ? user.getNickName() : 
+                                           (user.getUserName() != null ? user.getUserName() : pureName)) : 
+                                          pureName;
+                            }
+                        } catch (Exception e) {
+                            log.error("根据用户ID查询失败：{}", e.getMessage(), e);
+                            // 异常时回退到用户名查询
+                            user = userService.findByUserName(pureName);
+                            userId = user != null ? user.getUserId() : null;
+                            // 确保realName不为null
+                            realName = user != null ? 
+                                      (user.getNickName() != null ? user.getNickName() : 
+                                       (user.getUserName() != null ? user.getUserName() : pureName)) : 
+                                      pureName;
+                        }
+                    } else {
+                        // 仅使用用户名查询
+                        user = userService.findByUserName(pureName);
+                        userId = user != null ? user.getUserId() : null;
+                        // 确保realName不为null
+                        realName = user != null ? 
+                                  (user.getNickName() != null ? user.getNickName() : 
+                                   (user.getUserName() != null ? user.getUserName() : pureName)) : 
+                                  pureName;
                     }
                     
-                    result.put("code", 1);
-                    result.put("name", recognizedName);
-                    
-                    // 保存成功照片到指定目录
-                    saveSuccessPhoto(photoPath, recognizedName);
+                    // 保存成功照片到指定目录，使用纯用户名命名
+                    saveSuccessPhoto(photoPath, pureName, userId);
                     
                     // 设置成功语音播报内容
-                    speakText = String.format("欢迎%s，识别成功", recognizedName);
+                    speakText = String.format("欢迎%s，识别成功", realName);
                     
-                    // TODO: 执行识别成功后的业务逻辑，例如记录考勤、开门等
+                    // 生成打卡记录
+                    try {
+                        // 保存识别日志
+                        FaceRecognitionLog log2 = new FaceRecognitionLog();
+                        log2.setStatus(status);
+                        log2.setRecognizedName(recognizedName);
+                        log2.setPhotoPath(photoPath);
+                        log2.setRecognitionTime(java.util.Calendar.getInstance().getTime());
+                        log2.setUserId(userId);
+                        FaceRecognitionLog savedLog = attendanceService.saveRecognitionLog(log2);
+                        
+                        // 生成打卡记录
+                        if (userId != null) {
+                            // 检查用户是否在指定时间内已打卡（默认12小时）
+                            boolean hasRecentAttendance = attendanceService.hasRecentAttendance(userId, attendanceConfig.getPunchInterval());
+                            if (hasRecentAttendance) {
+                                // 已打卡，只保存日志，不生成打卡记录
+                                speakText = String.format("欢迎%s，您在%s小时内已打卡，无需重复打卡", realName, attendanceConfig.getPunchInterval());
+                                log.info("用户{}在{}小时内已打卡，跳过打卡记录生成", recognizedName, attendanceConfig.getPunchInterval());
+                            } else {
+                                // 未打卡，生成打卡记录
+                                attendanceService.generateAttendanceRecord(savedLog.getLogId(), userId, recognizedName, realName, 1, 1, "人脸识别打卡成功");
+                                log.info("打卡记录生成成功：用户{}, ID{}, 时间{}", recognizedName, userId, java.util.Calendar.getInstance().getTime());
+                            }
+                        } else {
+                            log.warn("未找到用户信息，无法生成打卡记录：用户{}", recognizedName);
+                        }
+                    } catch (Exception e) {
+                        log.error("生成打卡记录失败：{}", e.getMessage(), e);
+                    }
                     break;
 
                 case "unknown_face":
@@ -331,7 +433,8 @@ public class FaceDetectionServiceImpl implements FaceDetectionService {
             recognitionLog.setStatus((String) verificationResult.get("status"));
 
             // 设置识别到的姓名
-            recognitionLog.setRecognizedName((String) result.get("name"));
+            String recognizedName = (String) result.get("name");
+            recognitionLog.setRecognizedName(recognizedName);
 
             // 设置照片路径
             recognitionLog.setPhotoPath(photoPath);
@@ -346,9 +449,16 @@ public class FaceDetectionServiceImpl implements FaceDetectionService {
                 recognitionLog.setFaceCount(Integer.parseInt(verificationResult.get("face_count").toString()));
             }
 
+            // 根据用户名查询用户信息，设置用户ID
+            if (recognizedName != null) {
+                User user = userService.findByUserName(recognizedName);
+                if (user != null) {
+                    recognitionLog.setUserId(user.getUserId());
+                }
+            }
+
             // 保存日志
             attendanceService.saveRecognitionLog(recognitionLog);
-
 
             log.info("保存人脸识别人物识别日志成功：{}", recognitionLog.getLogId());
         } catch (Exception e) {
@@ -363,6 +473,18 @@ public class FaceDetectionServiceImpl implements FaceDetectionService {
      * @param name 识别到的姓名
      */
     private void saveSuccessPhoto(String originalPath, String name) {
+        // 调用重载方法，用户ID为null
+        saveSuccessPhoto(originalPath, name, null);
+    }
+    
+    /**
+     * 保存成功照片到指定目录（支持用户ID）
+     *
+     * @param originalPath 原始照片路径
+     * @param name 识别到的姓名
+     * @param userId 用户ID
+     */
+    private void saveSuccessPhoto(String originalPath, String name, Long userId) {
         try {
             // 获取成功照片保存路径
             String successPath = faceRecognitionConfig.getSuccessPhotoPath();
@@ -377,9 +499,9 @@ public class FaceDetectionServiceImpl implements FaceDetectionService {
                 Files.createDirectories(saveDir);
             }
             
-            // 生成新的文件名：当前时间_姓名.jpg
+            // 生成新的文件名：当前时间_用户ID_姓名.jpg
             String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmssSSS"));
-            String fileName = timestamp + "_" + name + ".jpg";
+            String fileName = timestamp + "_" + (userId != null ? userId : "unknown") + "_" + name + ".jpg";
             // 清理文件名，移除Windows文件系统不允许的字符
             String cleanFileName = fileName.replaceAll("[<>:\"/\\|?*]", "_");
             Path targetPath = saveDir.resolve(cleanFileName);

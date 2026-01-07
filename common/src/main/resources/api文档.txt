@@ -1,0 +1,71 @@
+# 公共服务API文档
+
+## 1. 模块概述
+公共服务提供通用的工具和功能，如文件上传等。
+
+## 2. 接口列表
+
+### 2.1 通用上传请求（单个）
+- **接口路径**：/upload
+- **请求方法**：POST
+- **功能描述**：上传单个文件
+- **请求参数**：
+  - file：文件（MultipartFile类型）
+- **响应结果**：
+  - url：文件访问URL
+  - fileName：上传后的文件名
+  - newFileName：新文件名（不带路径）
+  - originalFilename：原始文件名
+- **使用示例**：
+  ```
+  POST /upload
+  Content-Type: multipart/form-data
+  
+  file: [文件内容]
+  ```
+- **返回示例**：
+  ```json
+  {
+    "code": 200,
+    "message": "操作成功",
+    "data": {
+      "url": "http://localhost:8080/upload/2026/01/06/example.jpg",
+      "fileName": "upload/2026/01/06/example.jpg",
+      "newFileName": "example.jpg",
+      "originalFilename": "example.jpg"
+    }
+  }
+  ```
+
+### 2.2 通用上传请求（多个）
+- **接口路径**：/uploads
+- **请求方法**：POST
+- **功能描述**：上传多个文件
+- **请求参数**：
+  - files：文件列表（List<MultipartFile>类型）
+- **响应结果**：
+  - urls：文件访问URL列表，逗号分隔
+  - fileNames：上传后的文件名列表，逗号分隔
+  - newFileNames：新文件名列表，逗号分隔
+  - originalFilenames：原始文件名列表，逗号分隔
+- **使用示例**：
+  ```
+  POST /uploads
+  Content-Type: multipart/form-data
+  
+  files: [文件1内容]
+  files: [文件2内容]
+  ```
+- **返回示例**：
+  ```json
+  {
+    "code": 200,
+    "message": "操作成功",
+    "data": {
+      "urls": "http://localhost:8080/upload/2026/01/06/example1.jpg,http://localhost:8080/upload/2026/01/06/example2.jpg",
+      "fileNames": "upload/2026/01/06/example1.jpg,upload/2026/01/06/example2.jpg",
+      "newFileNames": "example1.jpg,example2.jpg",
+      "originalFilenames": "example1.jpg,example2.jpg"
+    }
+  }
+  ```

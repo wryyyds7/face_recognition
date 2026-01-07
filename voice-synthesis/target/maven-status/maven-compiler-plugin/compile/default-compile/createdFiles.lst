@@ -1,0 +1,6 @@
+com\homework\voicesynthesis\config\VoiceConfig.class
+com\homework\voicesynthesis\controller\VoiceController.class
+com\homework\voicesynthesis\config\WebConfig.class
+com\homework\voicesynthesis\service\VoiceService.class
+com\homework\voicesynthesis\service\impl\VoiceServiceImpl.class
+com\homework\voicesynthesis\VoiceApplication.class

@@ -26,9 +26,19 @@ public interface UserService {
     public Long updateUser(User user);
     public Boolean deleteUser(UserDTO UserDTO);
     public User updateUserStatus(UserDTO UserDTO);
-    public User[] addUser(User[] user);
-    public Long register(User user);
-    public User updateUserPassword(User user);
+
+    User[] addUser(User[] user);
+
+    Long register(User user);
+
+    User updateUserPassword(User user);
+    
+    /**
+     * 根据用户名查询用户
+     * @param userName 用户名
+     * @return 用户信息
+     */
+    User findByUserName(String userName);
     // 投诉相关方法
     public Long createComplaint(ComplaintDTO complaintDTO);
     public List<UserComplaint> getComplaintList(ComplaintDTO complaintDTO);

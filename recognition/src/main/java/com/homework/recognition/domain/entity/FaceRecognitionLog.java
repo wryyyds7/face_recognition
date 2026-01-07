@@ -15,6 +15,8 @@ public class FaceRecognitionLog extends BaseEntity {
     /** 日志ID */
     private Long logId;
 
+
+    private Long userId;
     /** 识别时间 */
     private Date recognitionTime;
 
@@ -65,6 +67,13 @@ public class FaceRecognitionLog extends BaseEntity {
         this.recognizedName = recognizedName;
     }
 
+    public Long getUserId() {
+        return userId;
+    }
+
+    public void setUserId(Long userId) {
+        this.userId = userId;
+    }
     public String getPhotoPath() {
         return photoPath;
     }

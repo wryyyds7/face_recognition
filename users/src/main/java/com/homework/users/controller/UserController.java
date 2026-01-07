@@ -7,7 +7,7 @@ import com.homework.users.domain.dto.SearchUserDTO;
 import com.homework.users.domain.dto.UserDTO;
 import com.homework.common.domain.entity.Result;
 import com.homework.common.domain.entity.User;
-import io.swagger.annotations.ApiOperation;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,7 +37,7 @@ public class UserController extends BaseController {
 
     @PostMapping("/admin/searchUserByPage")
     @PreAuthorize("@permittionService.hasRole('ADMIN')")
-    @ApiOperation("用户搜索服务(分页)")
+
     public Result searchUserBypage(@RequestBody SearchUserDTO userDTO){
         try {
             
@@ -51,14 +51,14 @@ public class UserController extends BaseController {
 
     @PreAuthorize("@permittionService.hasRole('USER')")
     @GetMapping("/user/searchUser")
-    @ApiOperation("用户搜索服务")
+
     public Result searchUser(@RequestBody SearchUserDTO userDTO){
         return Result.success(userService.searchUser(userDTO));
     }
 
     @PostMapping("/admin/deleteUser")
     @PreAuthorize("@permittionService.hasRole('ADMIN')")
-    @ApiOperation("用户删除服务")
+
     public Result deleteUser(@RequestBody UserDTO userDTO){
         try {
             // 继续执行删除逻辑
@@ -74,7 +74,7 @@ public class UserController extends BaseController {
     
     @DeleteMapping("/admin/deleteUser/{userId}")
     @PreAuthorize("@permittionService.hasRole('ADMIN')")
-    @ApiOperation("用户删除服务(通过路径参数)")
+
     public Result deleteUserById(@PathVariable Long userId){
         try {
             // 创建UserDTO对象，只设置userId
@@ -93,14 +93,14 @@ public class UserController extends BaseController {
 
     @PreAuthorize("@permittionService.hasRole('USER')")
     @PutMapping("/user/updateUser")
-    @ApiOperation("用户更新服务")
+
     public Result updateUser(@RequestBody UserDTO userDTO){
         return Result.success(userService.updateUser(UserDTO.toUser(userDTO)));
     }
 
     @PutMapping("/admin/updateUserStatus")
     @PreAuthorize("@permittionService.hasRole('ADMIN')")
-    @ApiOperation("用户状态更新服务")
+
     public Result updateUserStatus(@RequestBody UserDTO userDTO){
         try {
             // 继续执行状态更新逻辑
@@ -113,7 +113,7 @@ public class UserController extends BaseController {
 
     @PostMapping("/admin/add")
     @PreAuthorize("@permittionService.hasRole('ADMIN')")
-    @ApiOperation("用户添加服务")
+
     public Result add(@RequestBody User user){
         try {
             // 继续执行注册逻辑
@@ -130,7 +130,7 @@ public class UserController extends BaseController {
      * 创建投诉
      */
     @PostMapping("/complaint")
-    @ApiOperation("创建投诉")
+
     public Result createComplaint(@RequestBody ComplaintDTO complaintDTO) {
         log.info("开始处理创建投诉请求: {}", complaintDTO);
         try {
@@ -148,7 +148,7 @@ public class UserController extends BaseController {
      */
     @PreAuthorize("@permittionService.hasRole('USER')")
     @GetMapping("/complaint/list")
-    @ApiOperation("获取投诉列表")
+
     public Result getComplaintList(ComplaintDTO complaintDTO) {
         log.info("开始处理获取投诉列表请求: {}", complaintDTO);
         try {
@@ -166,7 +166,7 @@ public class UserController extends BaseController {
      */
     @PreAuthorize("@permittionService.hasRole('USER')")
     @GetMapping("/complaint/{complaintId}")
-    @ApiOperation("获取投诉详情")
+
     public Result getComplaintDetail(@PathVariable("complaintId") Long complaintId) {
         log.info("开始处理获取投诉详情请求，投诉ID: {}", complaintId);
         try {
@@ -184,7 +184,7 @@ public class UserController extends BaseController {
      */
     @PreAuthorize("@permittionService.hasRole('USER')")
     @PutMapping("/complaint/status/{complaintId}")
-    @ApiOperation("更新投诉状态")
+
     public Result updateComplaintStatus(@PathVariable("complaintId") Long complaintId, 
                                        @RequestBody String status) {
         log.info("开始处理更新投诉状态请求，投诉ID: {}, 状态: {}", complaintId, status);
@@ -203,7 +203,7 @@ public class UserController extends BaseController {
      */
     @PreAuthorize("@permittionService.hasRole('USER')")
     @PutMapping("/complaint/handle/{complaintId}")
-    @ApiOperation("处理投诉")
+
     public Result handleComplaint(@PathVariable("complaintId") Long complaintId, 
                                  @RequestParam String status, 
                                  @RequestParam String handleResult, 
@@ -225,7 +225,7 @@ public class UserController extends BaseController {
      */
     @PreAuthorize("@permittionService.hasRole('USER')")
     @GetMapping("/complaint/user/{userId}")
-    @ApiOperation("获取用户的投诉列表")
+
     public Result getComplaintsByUserId(@PathVariable("userId") Long userId) {
         log.info("开始处理获取用户投诉列表请求，用户ID: {}", userId);
         try {
@@ -242,7 +242,7 @@ public class UserController extends BaseController {
      * 上传投诉附件
      */
     @PostMapping("/complaint/attachment")
-    @ApiOperation("上传投诉附件")
+
     public Result uploadComplaintAttachment(@RequestBody UserComplaintAttachment attachment) {
         log.info("开始处理上传投诉附件请求: {}", attachment);
         try {
@@ -260,7 +260,7 @@ public class UserController extends BaseController {
      */
     @PreAuthorize("@permittionService.hasRole('USER')")
     @GetMapping("/complaint/{complaintId}/attachments")
-    @ApiOperation("获取投诉附件列表")
+
     public Result getComplaintAttachments(@PathVariable("complaintId") Long complaintId) {
         log.info("开始处理获取投诉附件列表请求，投诉ID: {}", complaintId);
         try {

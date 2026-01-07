@@ -4,8 +4,7 @@ import com.homework.common.controller.BaseController;
 import com.homework.common.domain.entity.Result;
 import com.homework.recognition.domain.entity.FaceRecognitionLog;
 import com.homework.recognition.service.AttendanceService;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,7 +21,6 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/recognition/log")
-@Api(tags = "识别日志管理")
 public class RecognitionLogController extends BaseController {
     
     private static final Logger log = LoggerFactory.getLogger(RecognitionLogController.class);
@@ -42,7 +40,6 @@ public class RecognitionLogController extends BaseController {
      * @return 识别日志列表
      */
     @GetMapping
-    @ApiOperation("获取识别日志列表")
     public Result getRecognitionLogs(
             @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") Date startTime,
             @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") Date endTime) {
@@ -64,7 +61,6 @@ public class RecognitionLogController extends BaseController {
      * @return 识别日志
      */
     @GetMapping("/{logId}")
-    @ApiOperation("根据日志ID获取识别日志")
     public Result getRecognitionLogById(@PathVariable Long logId) {
         try {
             log.info("根据日志ID获取识别日志：logId={}", logId);

@@ -270,6 +270,16 @@ public class UserServiceImpl implements UserService {
     public User updateUserPassword(User user) {
         return null;
     }
+    
+    @Override
+    public User findByUserName(String userName) {
+        try {
+            return userMapper.selectByUsername(userName);
+        } catch (Exception e) {
+            log.error("根据用户名查询用户失败：{}", e.getMessage(), e);
+            return null;
+        }
+    }
 
 
     // 投诉相关方法实现

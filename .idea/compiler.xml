@@ -8,15 +8,6 @@
         <outputRelativeToContentRoot value="true" />
       </profile>
       <profile name="Annotation profile for voice-synthesis" enabled="true">
-        <sourceOutputDir name="../target/generated-sources/annotations" />
-        <sourceTestOutputDir name="../target/generated-test-sources/test-annotations" />
-        <outputRelativeToContentRoot value="true" />
-        <processorPath useClasspath="false">
-          <entry name="E:/language/maven/repository/org/projectlombok/lombok/1.18.32/lombok-1.18.32.jar" />
-        </processorPath>
-        <module name="voice-synthesis" />
-      </profile>
-      <profile name="Annotation profile for login" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
@@ -28,6 +19,7 @@
         <module name="common" />
         <module name="users" />
         <module name="gateway" />
+        <module name="voice-synthesis" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>

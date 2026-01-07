@@ -1,6 +1,9 @@
 package com.homework.recognition.service.impl;
 
 import com.homework.common.domain.entity.User;
+import com.homework.common.utils.FileUploadUtils;
+import com.homework.common.exception.file.*;
+import com.homework.common.utils.MimeTypeUtils;
 import com.homework.recognition.config.PythonServiceConfig;
 import com.homework.recognition.service.UserFaceService;
 import org.slf4j.Logger;
@@ -44,25 +47,34 @@ public class UserFaceServiceImpl implements UserFaceService {
     @Override
     public User addUserFace(User user, MultipartFile faceImg) {
         try {
-            log.info("为用户添加人脸照片，用户名：{}", user.getUserName());
+            log.info("为用户添加人脸照片，用户名：{}，用户ID：{}", user.getUserName(), user.getUserId());
 
-            // 1. 确保用户人脸照片目录存在
-            Path userFaceDir = getOrCreateUserFaceDir(user.getUserName());
+            // 1. 文件验证：只允许图片类型，大小限制50M
+            FileUploadUtils.assertAllowed(faceImg, MimeTypeUtils.IMAGE_EXTENSION);
 
-            // 2. 生成文件名，使用用户名+序号
-            String fileName = generateFileName(user.getUserName(), faceImg.getOriginalFilename());
+            // 2. 确保用户人脸照片目录存在，使用用户名_用户ID作为目录名
+            Path userFaceDir = getOrCreateUserFaceDir(user);
 
-            // 3. 保存文件
+            // 3. 生成文件名，使用用户名_用户ID作为文件名
+            String fileName = generateFileName(user, faceImg.getOriginalFilename());
+
+            // 4. 保存文件
             Path targetLocation = userFaceDir.resolve(fileName);
             Files.copy(faceImg.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
 
-            // 4. 更新用户的avatar字段或faceImages字段
+            // 5. 更新用户的avatar字段或faceImages字段
             updateUserFacePath(user, targetLocation.toString());
 
             log.info("用户人脸照片添加成功，保存路径：{}", targetLocation.toString());
             return user;
+        } catch (FileSizeLimitExceededException e) {
+            log.error("文件大小超过限制，用户名：{}，用户ID：{}，错误信息：{}", user.getUserName(), user.getUserId(), e.getMessage(), e);
+            throw new RuntimeException("文件大小超过限制，最大50M", e);
+        } catch (InvalidExtensionException e) {
+            log.error("文件类型不允许，用户名：{}，用户ID：{}，错误信息：{}", user.getUserName(), user.getUserId(), e.getMessage(), e);
+            throw new RuntimeException("文件类型不允许，只支持图片格式", e);
         } catch (IOException e) {
-            log.error("为用户添加人脸照片失败，用户名：{}，错误信息：{}", user.getUserName(), e.getMessage(), e);
+            log.error("为用户添加人脸照片失败，用户名：{}，用户ID：{}，错误信息：{}", user.getUserName(), user.getUserId(), e.getMessage(), e);
             throw new RuntimeException("添加人脸照片失败", e);
         }
     }
@@ -77,14 +89,17 @@ public class UserFaceServiceImpl implements UserFaceService {
     @Override
     public User batchAddUserFaces(User user, List<MultipartFile> faceImgs) {
         try {
-            log.info("批量为用户添加人脸照片，用户名：{}，照片数量：{}", user.getUserName(), faceImgs.size());
+            log.info("批量为用户添加人脸照片，用户名：{}，用户ID：{}，照片数量：{}", user.getUserName(), user.getUserId(), faceImgs.size());
 
-            // 1. 确保用户人脸照片目录存在
-            Path userFaceDir = getOrCreateUserFaceDir(user.getUserName());
+            // 1. 确保用户人脸照片目录存在，使用用户名_用户ID作为目录名
+            Path userFaceDir = getOrCreateUserFaceDir(user);
 
             // 2. 保存所有文件
             for (MultipartFile faceImg : faceImgs) {
-                String fileName = generateFileName(user.getUserName(), faceImg.getOriginalFilename());
+                // 文件验证：只允许图片类型，大小限制50M
+                FileUploadUtils.assertAllowed(faceImg, MimeTypeUtils.IMAGE_EXTENSION);
+                
+                String fileName = generateFileName(user, faceImg.getOriginalFilename());
                 Path targetLocation = userFaceDir.resolve(fileName);
                 Files.copy(faceImg.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
                 log.info("用户人脸照片添加成功，保存路径：{}", targetLocation.toString());
@@ -94,8 +109,14 @@ public class UserFaceServiceImpl implements UserFaceService {
             updateUserFacePaths(user, getUserFaceList(user));
 
             return user;
+        } catch (FileSizeLimitExceededException e) {
+            log.error("文件大小超过限制，用户名：{}，用户ID：{}，错误信息：{}", user.getUserName(), user.getUserId(), e.getMessage(), e);
+            throw new RuntimeException("文件大小超过限制，最大50M", e);
+        } catch (InvalidExtensionException e) {
+            log.error("文件类型不允许，用户名：{}，用户ID：{}，错误信息：{}", user.getUserName(), user.getUserId(), e.getMessage(), e);
+            throw new RuntimeException("文件类型不允许，只支持图片格式", e);
         } catch (IOException e) {
-            log.error("批量为用户添加人脸照片失败，用户名：{}，错误信息：{}", user.getUserName(), e.getMessage(), e);
+            log.error("批量为用户添加人脸照片失败，用户名：{}，用户ID：{}，错误信息：{}", user.getUserName(), user.getUserId(), e.getMessage(), e);
             throw new RuntimeException("批量添加人脸照片失败", e);
         }
     }
@@ -239,13 +260,14 @@ public class UserFaceServiceImpl implements UserFaceService {
     /**
      * 获取或创建用户人脸照片目录
      *
-     * @param userName 用户名
+     * @param user 用户对象
      * @return 用户人脸照片目录路径
      * @throws IOException IO异常
      */
-    private Path getOrCreateUserFaceDir(String userName) throws IOException {
-        // 人脸数据库路径 + 用户名
-        Path userFaceDir = Paths.get(pythonServiceConfig.getDbPath(), userName);
+    private Path getOrCreateUserFaceDir(User user) throws IOException {
+        // 人脸数据库路径 + 用户名_用户ID
+        String dirName = user.getUserName() + "_" + user.getUserId();
+        Path userFaceDir = Paths.get(pythonServiceConfig.getDbPath(), dirName);
         if (!Files.exists(userFaceDir)) {
             Files.createDirectories(userFaceDir);
             log.info("创建用户人脸照片目录成功，目录路径：{}", userFaceDir.toString());
@@ -254,20 +276,37 @@ public class UserFaceServiceImpl implements UserFaceService {
     }
 
     /**
-     * 生成文件名，使用用户名作为文件名
+     * 生成文件名，使用用户名+用户ID作为文件名
      *
-     * @param userName 用户名
+     * @param user 用户对象
      * @param originalFilename 原始文件名
      * @return 生成的文件名
      * @throws IOException IO异常
      */
-    private String generateFileName(String userName, String originalFilename) throws IOException {
+    private String generateFileName(User user, String originalFilename) throws IOException {
         // 获取文件扩展名
         String extension = getFileExtension(originalFilename);
         
-        // 生成文件名：用户名+扩展名
-        // 直接使用用户名作为文件名，确保用户上传的永久识别图像的名字是自己的姓名
-        return userName + "." + extension;
+        // 生成文件名：用户名_用户ID+扩展名，确保唯一性
+        return user.getUserName() + "_" + user.getUserId() + "." + extension;
+    }
+
+    /**
+     * 根据用户名获取用户人脸照片目录
+     *
+     * @param userName 用户名
+     * @return 用户人脸照片目录路径
+     * @throws IOException IO异常
+     */
+    private Path getOrCreateUserFaceDir(String userName) throws IOException {
+        // 旧方法保留，用于兼容只提供用户名的情况
+        // 实际使用中应优先使用带User参数的方法
+        Path userFaceDir = Paths.get(pythonServiceConfig.getDbPath(), userName);
+        if (!Files.exists(userFaceDir)) {
+            Files.createDirectories(userFaceDir);
+            log.info("创建用户人脸照片目录成功，目录路径：{}", userFaceDir.toString());
+        }
+        return userFaceDir;
     }
 
     /**

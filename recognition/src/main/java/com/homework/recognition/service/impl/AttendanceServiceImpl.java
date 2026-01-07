@@ -164,4 +164,43 @@ public class AttendanceServiceImpl implements AttendanceService {
             throw new RuntimeException("根据日志ID获取识别日志失败", e);
         }
     }
+    
+    @Override
+    public boolean hasRecentAttendance(Long userId) {
+        // 默认使用12小时
+        return hasRecentAttendance(userId, 12);
+    }
+    
+    @Override
+    public boolean hasRecentAttendance(Long userId, int hours) {
+        try {
+            // 查询用户最近的打卡记录
+            List<AttendanceRecord> records = attendanceRecordMapper.selectByUserId(userId);
+            if (records == null || records.isEmpty()) {
+                return false;
+            }
+            
+            // 找到最近的一条打卡记录
+            AttendanceRecord recentRecord = records.stream()
+                    .max(Comparator.comparing(AttendanceRecord::getPunchTime))
+                    .orElse(null);
+            
+            if (recentRecord == null) {
+                return false;
+            }
+            
+            // 计算时间差（毫秒）
+            long timeDiff = System.currentTimeMillis() - recentRecord.getPunchTime().getTime();
+            
+            // 转换为小时
+            long hoursDiff = timeDiff / (1000 * 60 * 60);
+            
+            // 如果时间差小于指定小时数，返回true
+            return hoursDiff < hours;
+        } catch (Exception e) {
+            log.error("检查用户最近打卡记录失败：{}", e.getMessage(), e);
+            // 异常情况下默认返回false，允许用户打卡
+            return false;
+        }
+    }
 }

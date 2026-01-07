@@ -1,0 +1,491 @@
+# 用户服务API文档
+
+## 1. 模块概述
+用户服务提供用户管理、投诉管理等功能。
+
+## 2. 接口列表
+
+### 2.1 用户管理接口
+
+#### 2.1.1 用户搜索服务(分页)
+- **接口路径**：/users/admin/searchUserByPage
+- **请求方法**：POST
+- **功能描述**：分页搜索用户
+- **请求参数**：
+  - pageNum：页码（Integer类型）
+  - pageSize：每页条数（Integer类型）
+  - userName：用户名（String类型，可选）
+  - email：邮箱（String类型，可选）
+  - phone：手机号（String类型，可选）
+- **响应结果**：
+  - total：总记录数
+  - list：用户列表
+  - pageNum：当前页码
+  - pageSize：每页条数
+- **使用示例**：
+  ```
+  POST /users/admin/searchUserByPage
+  Content-Type: application/json
+  
+  {
+    "pageNum": 1,
+    "pageSize": 10,
+    "userName": "admin"
+  }
+  ```
+- **返回示例**：
+  ```json
+  {
+    "code": 200,
+    "message": "操作成功",
+    "data": {
+      "total": 1,
+      "list": [
+        {
+          "userId": 1,
+          "userName": "admin",
+          "email": "admin@example.com",
+          "phone": "13800138000",
+          "status": "ACTIVE",
+          "roles": ["ADMIN"]
+        }
+      ],
+      "pageNum": 1,
+      "pageSize": 10
+    }
+  }
+  ```
+
+#### 2.1.2 用户搜索服务
+- **接口路径**：/users/user/searchUser
+- **请求方法**：GET
+- **功能描述**：搜索用户
+- **请求参数**：
+  - userName：用户名（String类型，可选）
+  - email：邮箱（String类型，可选）
+  - phone：手机号（String类型，可选）
+- **响应结果**：
+  - 用户列表
+- **使用示例**：
+  ```
+  GET /users/user/searchUser?userName=admin
+  Content-Type: application/json
+  ```
+- **返回示例**：
+  ```json
+  {
+    "code": 200,
+    "message": "操作成功",
+    "data": [
+      {
+        "userId": 1,
+        "userName": "admin",
+        "email": "admin@example.com",
+        "phone": "13800138000",
+        "status": "ACTIVE",
+        "roles": ["ADMIN"]
+      }
+    ]
+  }
+  ```
+
+#### 2.1.3 用户删除服务
+- **接口路径**：/users/admin/deleteUser
+- **请求方法**：POST
+- **功能描述**：删除用户
+- **请求参数**：
+  - userId：用户ID（Long类型）
+- **响应结果**：
+  - 成功消息
+- **使用示例**：
+  ```
+  POST /users/admin/deleteUser
+  Content-Type: application/json
+  
+  {
+    "userId": 1
+  }
+  ```
+- **返回示例**：
+  ```json
+  {
+    "code": 200,
+    "message": "删除成功",
+    "data": null
+  }
+  ```
+
+#### 2.1.4 用户删除服务(通过路径参数)
+- **接口路径**：/users/admin/deleteUser/{userId}
+- **请求方法**：DELETE
+- **功能描述**：通过路径参数删除用户
+- **请求参数**：
+  - userId：用户ID（Long类型，路径参数）
+- **响应结果**：
+  - 成功消息
+- **使用示例**：
+  ```
+  DELETE /users/admin/deleteUser/1
+  Content-Type: application/json
+  ```
+- **返回示例**：
+  ```json
+  {
+    "code": 200,
+    "message": "删除成功",
+    "data": null
+  }
+  ```
+
+#### 2.1.5 用户更新服务
+- **接口路径**：/users/user/updateUser
+- **请求方法**：PUT
+- **功能描述**：更新用户信息
+- **请求参数**：
+  - userId：用户ID（Long类型）
+  - userName：用户名（String类型，可选）
+  - email：邮箱（String类型，可选）
+  - phone：手机号（String类型，可选）
+- **响应结果**：
+  - 更新后的用户对象
+- **使用示例**：
+  ```
+  PUT /users/user/updateUser
+  Content-Type: application/json
+  
+  {
+    "userId": 1,
+    "email": "newadmin@example.com"
+  }
+  ```
+- **返回示例**：
+  ```json
+  {
+    "code": 200,
+    "message": "操作成功",
+    "data": {
+      "userId": 1,
+      "userName": "admin",
+      "email": "newadmin@example.com",
+      "phone": "13800138000",
+      "status": "ACTIVE",
+      "roles": ["ADMIN"]
+    }
+  }
+  ```
+
+#### 2.1.6 用户状态更新服务
+- **接口路径**：/users/admin/updateUserStatus
+- **请求方法**：PUT
+- **功能描述**：更新用户状态
+- **请求参数**：
+  - userId：用户ID（Long类型）
+  - status：状态（String类型，如ACTIVE、INACTIVE）
+- **响应结果**：
+  - 更新后的用户对象
+- **使用示例**：
+  ```
+  PUT /users/admin/updateUserStatus
+  Content-Type: application/json
+  
+  {
+    "userId": 1,
+    "status": "INACTIVE"
+  }
+  ```
+- **返回示例**：
+  ```json
+  {
+    "code": 200,
+    "message": "操作成功",
+    "data": {
+      "userId": 1,
+      "userName": "admin",
+      "email": "admin@example.com",
+      "phone": "13800138000",
+      "status": "INACTIVE",
+      "roles": ["ADMIN"]
+    }
+  }
+  ```
+
+#### 2.1.7 用户添加服务
+- **接口路径**：/users/admin/add
+- **请求方法**：POST
+- **功能描述**：添加用户
+- **请求参数**：
+  - userName：用户名（String类型）
+  - password：密码（String类型）
+  - email：邮箱（String类型，可选）
+  - phone：手机号（String类型，可选）
+  - roles：角色列表（List<String>类型）
+- **响应结果**：
+  - 用户ID
+- **使用示例**：
+  ```
+  POST /users/admin/add
+  Content-Type: application/json
+  
+  {
+    "userName": "user2",
+    "password": "123456",
+    "email": "user2@example.com",
+    "phone": "13800138001",
+    "roles": ["USER"]
+  }
+  ```
+- **返回示例**：
+  ```json
+  {
+    "code": 200,
+    "message": "操作成功",
+    "data": 2
+  }
+  ```
+
+### 2.2 投诉管理接口
+
+#### 2.2.1 创建投诉
+- **接口路径**：/users/complaint
+- **请求方法**：POST
+- **功能描述**：创建投诉
+- **请求参数**：
+  - title：投诉标题（String类型）
+  - content：投诉内容（String类型）
+  - userId：用户ID（Long类型）
+  - complaintType：投诉类型（String类型）
+- **响应结果**：
+  - complaintId：投诉ID
+- **使用示例**：
+  ```
+  POST /users/complaint
+  Content-Type: application/json
+  
+  {
+    "title": "系统故障",
+    "content": "系统无法正常登录",
+    "userId": 1,
+    "complaintType": "SYSTEM"
+  }
+  ```
+- **返回示例**：
+  ```json
+  {
+    "code": 200,
+    "message": "操作成功",
+    "data": 1
+  }
+  ```
+
+#### 2.2.2 获取投诉列表
+- **接口路径**：/users/complaint/list
+- **请求方法**：GET
+- **功能描述**：获取投诉列表
+- **请求参数**：
+  - title：投诉标题（String类型，可选）
+  - complaintType：投诉类型（String类型，可选）
+  - status：投诉状态（String类型，可选）
+- **响应结果**：
+  - 投诉列表
+- **使用示例**：
+  ```
+  GET /users/complaint/list?status=PENDING
+  Content-Type: application/json
+  ```
+- **返回示例**：
+  ```json
+  {
+    "code": 200,
+    "message": "操作成功",
+    "data": [
+      {
+        "complaintId": 1,
+        "title": "系统故障",
+        "content": "系统无法正常登录",
+        "userId": 1,
+        "userName": "admin",
+        "complaintType": "SYSTEM",
+        "status": "PENDING",
+        "createTime": "2026-01-06 10:00:00"
+      }
+    ]
+  }
+  ```
+
+#### 2.2.3 获取投诉详情
+- **接口路径**：/users/complaint/{complaintId}
+- **请求方法**：GET
+- **功能描述**：获取投诉详情
+- **请求参数**：
+  - complaintId：投诉ID（Long类型，路径参数）
+- **响应结果**：
+  - 投诉详情
+- **使用示例**：
+  ```
+  GET /users/complaint/1
+  Content-Type: application/json
+  ```
+- **返回示例**：
+  ```json
+  {
+    "code": 200,
+    "message": "操作成功",
+    "data": {
+      "complaintId": 1,
+      "title": "系统故障",
+      "content": "系统无法正常登录",
+      "userId": 1,
+      "userName": "admin",
+      "complaintType": "SYSTEM",
+      "status": "PENDING",
+      "createTime": "2026-01-06 10:00:00",
+      "updateTime": "2026-01-06 10:00:00"
+    }
+  }
+  ```
+
+#### 2.2.4 更新投诉状态
+- **接口路径**：/users/complaint/status/{complaintId}
+- **请求方法**：PUT
+- **功能描述**：更新投诉状态
+- **请求参数**：
+  - complaintId：投诉ID（Long类型，路径参数）
+  - status：投诉状态（String类型，如PENDING、PROCESSING、RESOLVED）
+- **响应结果**：
+  - 成功消息
+- **使用示例**：
+  ```
+  PUT /users/complaint/status/1
+  Content-Type: application/json
+  
+  "PROCESSING"
+  ```
+- **返回示例**：
+  ```json
+  {
+    "code": 200,
+    "message": "操作成功",
+    "data": null
+  }
+  ```
+
+#### 2.2.5 处理投诉
+- **接口路径**：/users/complaint/handle/{complaintId}
+- **请求方法**：PUT
+- **功能描述**：处理投诉
+- **请求参数**：
+  - complaintId：投诉ID（Long类型，路径参数）
+  - status：投诉状态（String类型，如RESOLVED、REJECTED）
+  - handleResult：处理结果（String类型）
+  - handlerId：处理人ID（Long类型）
+- **响应结果**：
+  - 成功消息
+- **使用示例**：
+  ```
+  PUT /users/complaint/handle/1?status=RESOLVED&handleResult=已修复&handlerId=2
+  Content-Type: application/json
+  ```
+- **返回示例**：
+  ```json
+  {
+    "code": 200,
+    "message": "操作成功",
+    "data": null
+  }
+  ```
+
+#### 2.2.6 获取用户的投诉列表
+- **接口路径**：/users/complaint/user/{userId}
+- **请求方法**：GET
+- **功能描述**：获取指定用户的投诉列表
+- **请求参数**：
+  - userId：用户ID（Long类型，路径参数）
+- **响应结果**：
+  - 投诉列表
+- **使用示例**：
+  ```
+  GET /users/complaint/user/1
+  Content-Type: application/json
+  ```
+- **返回示例**：
+  ```json
+  {
+    "code": 200,
+    "message": "操作成功",
+    "data": [
+      {
+        "complaintId": 1,
+        "title": "系统故障",
+        "content": "系统无法正常登录",
+        "userId": 1,
+        "userName": "admin",
+        "complaintType": "SYSTEM",
+        "status": "PENDING",
+        "createTime": "2026-01-06 10:00:00"
+      }
+    ]
+  }
+  ```
+
+#### 2.2.7 上传投诉附件
+- **接口路径**：/users/complaint/attachment
+- **请求方法**：POST
+- **功能描述**：上传投诉附件
+- **请求参数**：
+  - complaintId：投诉ID（Long类型）
+  - fileName：文件名（String类型）
+  - filePath：文件路径（String类型）
+  - fileType：文件类型（String类型）
+- **响应结果**：
+  - 附件ID
+- **使用示例**：
+  ```
+  POST /users/complaint/attachment
+  Content-Type: application/json
+  
+  {
+    "complaintId": 1,
+    "fileName": "screenshot.png",
+    "filePath": "/upload/2026/01/06/screenshot.png",
+    "fileType": "IMAGE"
+  }
+  ```
+- **返回示例**：
+  ```json
+  {
+    "code": 200,
+    "message": "操作成功",
+    "data": 1
+  }
+  ```
+
+#### 2.2.8 获取投诉附件列表
+- **接口路径**：/users/complaint/{complaintId}/attachments
+- **请求方法**：GET
+- **功能描述**：获取投诉附件列表
+- **请求参数**：
+  - complaintId：投诉ID（Long类型，路径参数）
+- **响应结果**：
+  - 附件列表
+- **使用示例**：
+  ```
+  GET /users/complaint/1/attachments
+  Content-Type: application/json
+  ```
+- **返回示例**：
+  ```json
+  {
+    "code": 200,
+    "message": "操作成功",
+    "data": [
+      {
+        "attachmentId": 1,
+        "complaintId": 1,
+        "fileName": "screenshot.png",
+        "filePath": "/upload/2026/01/06/screenshot.png",
+        "fileType": "IMAGE",
+        "createTime": "2026-01-06 10:00:00"
+      }
+    ]
+  }
+  ```

@@ -14,7 +14,7 @@ import com.homework.users.service.UserService;
 import com.homework.common.feign.IpifyClient;
 import jakarta.servlet.http.HttpServletRequest;
 import io.jsonwebtoken.Claims;
-import io.swagger.annotations.ApiOperation;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
@@ -49,7 +49,6 @@ public class LoginController extends BaseController {
     /*
     * */
     @PostMapping("/login")
-    @ApiOperation("用户登录")
     public Result login(@RequestBody UserDTO user) {
         log.info("用户登录：{}", user);
         LoginInfo info = null;
@@ -95,7 +94,6 @@ public class LoginController extends BaseController {
     }
 
     @PostMapping("/register")
-    @ApiOperation("用户注册")
     public Result register(@RequestBody User user) {
         try {
             log.info("用户注册：{}", user.getUserName());
@@ -135,7 +133,6 @@ public class LoginController extends BaseController {
 
 
     @PostMapping("/logout")
-    @ApiOperation("用户登出")
     public Result logout(@RequestBody String token) {
         log.info("用户登出");
         UserContext.removeUser();
@@ -149,7 +146,6 @@ public class LoginController extends BaseController {
     }
 
     @PostMapping("/refreshToken")
-    @ApiOperation("刷新Token")
     public Result refreshToken(@RequestBody String token) {
 
         try {

@@ -5,10 +5,11 @@ import com.homework.common.domain.entity.Result;
 import com.homework.common.domain.entity.User;
 import com.homework.recognition.service.FaceDetectionService;
 import com.homework.recognition.service.UserFaceService;
-import io.swagger.annotations.ApiOperation;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -40,7 +41,6 @@ public class FaceRecognitionController extends BaseController {
      * @return 检测结果
      */
     @PostMapping("/detect")
-    @ApiOperation("手动触发实时人脸检测")
     public Result manualDetect() {
         try {
             log.info("手动触发实时人脸检测");
@@ -79,7 +79,6 @@ public class FaceRecognitionController extends BaseController {
      * @return 验证结果
      */
     @PostMapping("/verify")
-    @ApiOperation("人脸验证")
     public Result verifyFace(@RequestParam("imgPath") String imgPath) {
         try {
             log.info("人脸验证，图片路径：{}", imgPath);
@@ -93,11 +92,23 @@ public class FaceRecognitionController extends BaseController {
                         String identity = (String) verificationResult.get("identity");
                         String name = null;
                         if (identity != null) {
-                            int lastDotIndex = identity.lastIndexOf('.');
+                            // 提取文件名（去掉路径）
+                            java.io.File identityFile = new java.io.File(identity);
+                            String baseName = identityFile.getName();
+                            
+                            // 去掉后缀
+                            int lastDotIndex = baseName.lastIndexOf('.');
                             if (lastDotIndex > 0) {
-                                name = identity.substring(0, lastDotIndex);
+                                name = baseName.substring(0, lastDotIndex);
                             } else {
-                                name = identity;
+                                name = baseName;
+                            }
+                            
+                            // 提取纯用户名，去掉_用户ID部分
+                            int underscoreIndex = name.indexOf('_');
+                            if (underscoreIndex > 0) {
+                                name = name.substring(0, underscoreIndex);
+                                log.info("提取纯用户名：从{}提取为{}", baseName, name);
                             }
                         }
                         // 创建包含姓名的响应数据
@@ -127,7 +138,6 @@ public class FaceRecognitionController extends BaseController {
      * @return 识别结果
      */
     @PostMapping("/recognize")
-    @ApiOperation("人脸识别")
     public Result recognizeFace(@RequestParam("imgPath") String imgPath) {
         try {
             log.info("人脸识别，图片路径：{}", imgPath);
@@ -141,11 +151,23 @@ public class FaceRecognitionController extends BaseController {
                         String identity = (String) recognitionResult.get("identity");
                         String name = null;
                         if (identity != null) {
-                            int lastDotIndex = identity.lastIndexOf('.');
+                            // 提取文件名（去掉路径）
+                            java.io.File identityFile = new java.io.File(identity);
+                            String baseName = identityFile.getName();
+                            
+                            // 去掉后缀
+                            int lastDotIndex = baseName.lastIndexOf('.');
                             if (lastDotIndex > 0) {
-                                name = identity.substring(0, lastDotIndex);
+                                name = baseName.substring(0, lastDotIndex);
                             } else {
-                                name = identity;
+                                name = baseName;
+                            }
+                            
+                            // 提取纯用户名，去掉_用户ID部分
+                            int underscoreIndex = name.indexOf('_');
+                            if (underscoreIndex > 0) {
+                                name = name.substring(0, underscoreIndex);
+                                log.info("提取纯用户名：从{}提取为{}", baseName, name);
                             }
                         }
                         // 创建包含姓名的响应数据
@@ -175,9 +197,8 @@ public class FaceRecognitionController extends BaseController {
      * @param faceImg 人脸照片文件
      * @return 更新后的用户对象
      */
-    @PostMapping("/user/face/add")
-    @ApiOperation("为用户添加人脸照片")
-    public Result addUserFace(@RequestBody User user, @RequestPart("faceImg") MultipartFile faceImg) {
+    @PostMapping(value = "/user/face/add", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public Result addUserFace(@ModelAttribute User user, @RequestPart("faceImg") MultipartFile faceImg) {
         try {
             log.info("为用户添加人脸照片，用户名：{}", user.getUserName());
             User updatedUser = userFaceService.addUserFace(user, faceImg);
@@ -195,9 +216,8 @@ public class FaceRecognitionController extends BaseController {
      * @param faceImgs 人脸照片文件列表
      * @return 更新后的用户对象
      */
-    @PostMapping("/user/face/batchAdd")
-    @ApiOperation("批量为用户添加人脸照片")
-    public Result batchAddUserFaces(@RequestBody User user, @RequestPart("faceImgs") List<MultipartFile> faceImgs) {
+    @PostMapping(value = "/user/face/batchAdd", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public Result batchAddUserFaces(@ModelAttribute User user, @RequestPart("faceImgs") List<MultipartFile> faceImgs) {
         try {
             log.info("批量为用户添加人脸照片，用户名：{}，照片数量：{}", user.getUserName(), faceImgs.size());
             User updatedUser = userFaceService.batchAddUserFaces(user, faceImgs);
@@ -216,9 +236,8 @@ public class FaceRecognitionController extends BaseController {
      * @param oldImgName 旧的人脸照片文件名
      * @return 更新后的用户对象
      */
-    @PostMapping("/user/face/update")
-    @ApiOperation("更新用户人脸照片")
-    public Result updateUserFace(@RequestBody User user, @RequestPart("faceImg") MultipartFile faceImg, @RequestParam("oldImgName") String oldImgName) {
+    @PostMapping(value = "/user/face/update", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public Result updateUserFace(@ModelAttribute User user, @RequestPart("faceImg") MultipartFile faceImg, @RequestParam("oldImgName") String oldImgName) {
         try {
             log.info("更新用户人脸照片，用户名：{}，旧照片文件名：{}", user.getUserName(), oldImgName);
             User updatedUser = userFaceService.updateUserFace(user, faceImg, oldImgName);
@@ -237,7 +256,6 @@ public class FaceRecognitionController extends BaseController {
      * @return 更新后的用户对象
      */
     @PostMapping("/user/face/delete")
-    @ApiOperation("删除用户人脸照片")
     public Result deleteUserFace(@RequestBody User user, @RequestParam("imgName") String imgName) {
         try {
             log.info("删除用户人脸照片，用户名：{}，照片文件名：{}", user.getUserName(), imgName);
@@ -256,7 +274,6 @@ public class FaceRecognitionController extends BaseController {
      * @return 人脸照片文件列表
      */
     @PostMapping("/user/face/list")
-    @ApiOperation("获取用户的人脸照片列表")
     public Result getUserFaceList(@RequestBody User user) {
         try {
             log.info("获取用户人脸照片列表，用户名：{}", user.getUserName());
@@ -275,7 +292,6 @@ public class FaceRecognitionController extends BaseController {
      * @return 人脸照片路径列表
      */
     @GetMapping("/user/face/list/{userName}")
-    @ApiOperation("根据用户名获取用户的人脸照片列表")
     public Result getUserFaceListByUserName(@PathVariable("userName") String userName) {
         try {
             log.info("根据用户名获取用户人脸照片列表，用户名：{}", userName);
@@ -294,7 +310,6 @@ public class FaceRecognitionController extends BaseController {
      * @return 更新后的用户对象
      */
     @PostMapping("/user/face/clear")
-    @ApiOperation("清空用户的所有人脸照片")
     public Result clearUserFaces(@RequestBody User user) {
         try {
             log.info("清空用户所有人脸照片，用户名：{}", user.getUserName());

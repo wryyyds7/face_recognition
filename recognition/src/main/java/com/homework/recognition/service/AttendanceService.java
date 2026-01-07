@@ -90,4 +90,21 @@ public interface AttendanceService {
      * @return 识别日志
      */
     FaceRecognitionLog getRecognitionLogById(Long logId);
+    
+    /**
+     * 检查用户是否在默认时间内（12小时）已打卡
+     *
+     * @param userId 用户ID
+     * @return 是否已打卡
+     */
+    boolean hasRecentAttendance(Long userId);
+    
+    /**
+     * 检查用户是否在指定时间内已打卡
+     *
+     * @param userId 用户ID
+     * @param hours 指定时间（小时）
+     * @return 是否已打卡
+     */
+    boolean hasRecentAttendance(Long userId, int hours);
 }

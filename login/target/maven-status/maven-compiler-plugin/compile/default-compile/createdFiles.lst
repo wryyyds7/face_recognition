@@ -1,4 +1,4 @@
+com\homework\login\config\WebConfig.class
 com\homework\login\LoginApplication.class
 com\homework\login\WindowsTTS.class
-com\homework\login\config\WebConfig.class
 com\homework\login\controller\LoginController.class

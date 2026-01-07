@@ -1,0 +1,119 @@
+# 语音合成服务API文档
+
+## 1. 模块概述
+语音合成服务提供文本转语音功能，支持不同音色、音量和语速的配置。
+
+## 2. 接口列表
+
+### 2.1 语音合成并播放
+- **接口路径**：/voice/speak
+- **请求方法**：POST
+- **功能描述**：将文本转换为语音并播放
+- **请求参数**：
+  - text：要合成的文本（String类型）
+- **响应结果**：
+  - 操作结果消息
+- **使用示例**：
+  ```
+  POST /voice/speak
+  Content-Type: application/json
+  
+  {
+    "text": "你好，欢迎使用语音合成服务"
+  }
+  ```
+- **返回示例**：
+  ```json
+  {
+    "code": 200,
+    "message": "语音合成成功",
+    "data": null
+  }
+  ```
+
+### 2.2 语音合成并播放（指定音色）
+- **接口路径**：/voice/speak/voice
+- **请求方法**：POST
+- **功能描述**：指定音色，将文本转换为语音并播放
+- **请求参数**：
+  - text：要合成的文本（String类型）
+  - voiceType：音色类型（String类型，可选值：female、male）
+- **响应结果**：
+  - 操作结果消息
+- **使用示例**：
+  ```
+  POST /voice/speak/voice
+  Content-Type: application/json
+  
+  {
+    "text": "你好，欢迎使用语音合成服务",
+    "voiceType": "female"
+  }
+  ```
+- **返回示例**：
+  ```json
+  {
+    "code": 200,
+    "message": "语音合成成功",
+    "data": null
+  }
+  ```
+
+### 2.3 语音合成并播放（指定音量和语速）
+- **接口路径**：/voice/speak/full
+- **请求方法**：POST
+- **功能描述**：指定音量和语速，将文本转换为语音并播放
+- **请求参数**：
+  - text：要合成的文本（String类型）
+  - voiceType：音色类型（String类型，可选值：female、male，可选）
+  - volume：音量（Integer类型，范围：0-100，可选）
+  - rate：语速（Integer类型，范围：-10到+10，可选）
+- **响应结果**：
+  - 操作结果消息
+- **使用示例**：
+  ```
+  POST /voice/speak/full
+  Content-Type: application/json
+  
+  {
+    "text": "你好，欢迎使用语音合成服务",
+    "voiceType": "male",
+    "volume": 80,
+    "rate": 0
+  }
+  ```
+- **返回示例**：
+  ```json
+  {
+    "code": 200,
+    "message": "语音合成成功",
+    "data": null
+  }
+  ```
+
+### 2.4 获取语音合成配置
+- **接口路径**：/voice/config
+- **请求方法**：GET
+- **功能描述**：获取语音合成的默认配置
+- **请求参数**：无
+- **响应结果**：
+  - volume：默认音量（0-100）
+  - rate：默认语速（-10到+10）
+  - defaultVoiceType：默认音色类型（female或male）
+- **使用示例**：
+  ```
+  GET /voice/config
+  Content-Type: application/json
+  ```
+- **返回示例**：
+  ```json
+  {
+    "code": 200,
+    "message": "操作成功",
+    "data": {
+      "volume": 80,
+      "rate": 0,
+      "defaultVoiceType": "female"
+    }
+  }
+  ```

@@ -3,8 +3,7 @@ package com.homework.recognition.controller;
 import com.homework.common.controller.BaseController;
 import com.homework.common.domain.entity.Result;
 import com.homework.recognition.service.impl.FaceDetectionServiceImpl;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,7 +19,6 @@ import java.util.Map;
  */
 @RestController
 @RequestMapping("/recognition/detection")
-@Api(tags = "自动检测管理")
 public class DetectionController extends BaseController {
     
     private static final Logger log = LoggerFactory.getLogger(DetectionController.class);
@@ -38,7 +36,6 @@ public class DetectionController extends BaseController {
      * @return 操作结果
      */
     @PostMapping("/start")
-    @ApiOperation("开启自动检测")
     public Result startDetection() {
         try {
             log.info("开启自动检测");
@@ -56,7 +53,6 @@ public class DetectionController extends BaseController {
      * @return 操作结果
      */
     @PostMapping("/stop")
-    @ApiOperation("停止自动检测")
     public Result stopDetection() {
         try {
             log.info("停止自动检测");
@@ -74,7 +70,6 @@ public class DetectionController extends BaseController {
      * @return 检测状态
      */
     @GetMapping("/status")
-    @ApiOperation("获取自动检测状态")
     public Result getDetectionStatus() {
         try {
             boolean status = faceDetectionService.getDetectionStatus();
@@ -94,7 +89,6 @@ public class DetectionController extends BaseController {
      * @return 操作结果
      */
     @PostMapping("/save/enable")
-    @ApiOperation("开启识别结果保存")
     public Result enableSaveResult() {
         try {
             log.info("开启识别结果保存");
@@ -112,7 +106,6 @@ public class DetectionController extends BaseController {
      * @return 操作结果
      */
     @PostMapping("/save/disable")
-    @ApiOperation("关闭识别结果保存")
     public Result disableSaveResult() {
         try {
             log.info("关闭识别结果保存");

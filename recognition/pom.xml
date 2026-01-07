@@ -21,6 +21,11 @@
             <artifactId>common</artifactId>
             <version>0.0.1-SNAPSHOT</version>
         </dependency>
+        <dependency>
+            <groupId>com.homework</groupId>
+            <artifactId>users</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+        </dependency>
 
         <!-- Spring Boot Starter Web -->
         <dependency>
@@ -54,17 +59,7 @@
             <optional>true</optional>
         </dependency>
 
-        <!-- Swagger -->
-        <dependency>
-            <groupId>io.springfox</groupId>
-            <artifactId>springfox-swagger2</artifactId>
-            <version>2.9.2</version>
-        </dependency>
-        <dependency>
-            <groupId>io.springfox</groupId>
-            <artifactId>springfox-swagger-ui</artifactId>
-            <version>2.9.2</version>
-        </dependency>
+
         
         <!-- Webcam Capture库，用于调用真实摄像头 -->
         <dependency>
@@ -100,6 +95,8 @@
                     </excludes>
                 </configuration>
             </plugin>
+            <!-- Swagger2Markup插件，用于生成Markdown格式的API文档 -->
+
         </plugins>
     </build>
 
