@@ -5,7 +5,9 @@ import com.homework.users.mapper.UserMapper;
 import com.homework.users.mapper.UserComplaintMapper;
 import com.homework.users.mapper.UserComplaintAttachmentMapper;
 import com.homework.users.service.UserService;
+import com.homework.users.service.UserCacheService;
 import com.homework.common.utils.JwtUtils;
+import com.homework.common.service.RedisService;
 import com.homework.users.domain.dto.SearchUserDTO;
 import com.homework.users.domain.dto.UserDTO;
 import com.homework.users.domain.dto.ComplaintDTO;
@@ -47,6 +49,12 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private BaiduMapClient baiduMapClient;
+    
+    @Autowired
+    private UserCacheService userCacheService;
+    
+    @Autowired
+    private RedisService redisService;
 
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
     protected final Logger log = LoggerFactory.getLogger(this.getClass());
@@ -170,7 +178,7 @@ public class UserServiceImpl implements UserService {
         claims.put("username", dbUser.getUserName());
         claims.put("password", password);
         claims.put("roles", roles);
-        String token = JwtUtils.generateToken(claims);
+        String token = JwtUtils.generateToken(claims, redisService);
         
         // 设置登录时间
         Long loginTime = System.currentTimeMillis();
@@ -183,7 +191,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public boolean logout(String token) {
         try {
-            JwtUtils.logout(token);
+            JwtUtils.logout(token, redisService);
             return true;
         } catch (Exception e) {
             log.error("Logout failed for token: {}", token, e);
@@ -195,7 +203,23 @@ public class UserServiceImpl implements UserService {
     @Override
     public User searchUser(SearchUserDTO searchUserDTO) {
         long id = searchUserDTO.getUserId();
-        return userMapper.searchUserById(id);
+        
+        // 先检查缓存
+        User cachedUser = userCacheService.getUserInfoById(id);
+        if (cachedUser != null) {
+            log.info("从缓存中获取用户信息，用户ID：{}", id);
+            return cachedUser;
+        }
+        
+        // 缓存不存在，查询数据库
+        User user = userMapper.searchUserById(id);
+        
+        // 将结果缓存
+        if (user != null) {
+            userCacheService.cacheUserInfo(user);
+        }
+        
+        return user;
     }
 
     @Override
@@ -210,13 +234,31 @@ public class UserServiceImpl implements UserService {
         user.setUserName(user.getUserName());
         user.setPhonenumber(user.getPhonenumber());
         user.setEmail(user.getEmail());
-        return userMapper.updateUser(user);
+        
+        // 更新数据库
+        Long result = userMapper.updateUser(user);
+        
+        // 删除缓存，确保下次查询时获取最新数据
+        if (result > 0) {
+            userCacheService.deleteUserCacheById(user.getUserId());
+        }
+        
+        return result;
     }
 
     @Override
     public Boolean deleteUser(UserDTO UserDTO) {
         Long id = UserDTO.getUserId();
-        return userMapper.deleteUser(id);
+        
+        // 删除用户
+        Boolean result = userMapper.deleteUser(id);
+        
+        // 删除缓存
+        if (result) {
+            userCacheService.deleteUserCacheById(id);
+        }
+        
+        return result;
     }
 
     @Override
@@ -232,6 +274,13 @@ public class UserServiceImpl implements UserService {
         } else {
             user.setStatus(UserStatus.DISABLE); // 或者 UserStatus.DISABLE.name()
         }
+        
+        // 更新数据库
+        userMapper.updateUser(user);
+        
+        // 删除缓存
+        userCacheService.deleteUserCacheById(user.getUserId());
+        
         return user;
     }
 
@@ -254,10 +303,48 @@ public class UserServiceImpl implements UserService {
         String encodedPassword = passwordEncoder.encode(user.getPassword());
         user.setPassword(encodedPassword);
         user.setCreateTime(new java.util.Date());
-
+        
+        // 设置密码更新日期为当前时间
+        user.setPwdUpdateDate(new java.util.Date());
+        
         // 如果没有设置userType，默认为普通用户
         if (user.getUserType() == null || user.getUserType().isEmpty()) {
             user.setUserType("01");
+        }
+        
+        // 如果没有设置nickName，默认使用用户名
+        if (user.getNickName() == null || user.getNickName().isEmpty()) {
+            user.setNickName(user.getUserName());
+        }
+        
+        // 设置默认状态为启用
+        if (user.getStatus() == null) {
+            user.setStatus(UserStatus.ENABLE);
+        }
+        
+        // 设置默认删除标志为存在
+        if (user.getDelFlag() == null || user.getDelFlag().isEmpty()) {
+            user.setDelFlag("0");
+        }
+        
+        // 设置默认性别为空
+        if (user.getSex() == null) {
+            user.setSex("");
+        }
+        
+        // 设置默认头像为空
+        if (user.getAvatar() == null) {
+            user.setAvatar("");
+        }
+        
+        // 设置默认邮箱为空
+        if (user.getEmail() == null) {
+            user.setEmail("");
+        }
+        
+        // 设置默认手机号为空
+        if (user.getPhonenumber() == null) {
+            user.setPhonenumber("");
         }
 
         // 注册用户
@@ -274,9 +361,49 @@ public class UserServiceImpl implements UserService {
     @Override
     public User findByUserName(String userName) {
         try {
-            return userMapper.selectByUsername(userName);
+            // 先检查缓存
+            User cachedUser = userCacheService.getUserInfoByUserName(userName);
+            if (cachedUser != null) {
+                log.info("从缓存中获取用户信息，用户名：{}", userName);
+                return cachedUser;
+            }
+            
+            // 缓存不存在，查询数据库
+            User user = userMapper.selectByUsername(userName);
+            
+            // 将结果缓存
+            if (user != null) {
+                userCacheService.cacheUserInfo(user);
+            }
+            
+            return user;
         } catch (Exception e) {
             log.error("根据用户名查询用户失败：{}", e.getMessage(), e);
+            return null;
+        }
+    }
+    
+    @Override
+    public User findByUserId(Long userId) {
+        try {
+            // 先检查缓存
+            User cachedUser = userCacheService.getUserInfoById(userId);
+            if (cachedUser != null) {
+                log.info("从缓存中获取用户信息，用户ID：{}", userId);
+                return cachedUser;
+            }
+            
+            // 缓存不存在，查询数据库
+            User user = userMapper.searchUserById(userId);
+            System.out.println("从数据库中获取user为："+ user.toString());
+            // 将结果缓存
+            if (user != null) {
+                userCacheService.cacheUserInfo(user);
+            }
+            
+            return user;
+        } catch (Exception e) {
+            log.error("根据用户ID查询用户失败：{}", e.getMessage(), e);
             return null;
         }
     }

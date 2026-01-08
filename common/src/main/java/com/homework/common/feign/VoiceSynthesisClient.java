@@ -18,25 +18,21 @@ public interface VoiceSynthesisClient {
      * 语音合成并播放
      *
      * @param text 要合成的文本
-     * @param token Authorization头，自动从UserContext获取
      * @return 执行结果
      */
     @PostMapping("/speak")
-    Result speak(@RequestParam("text") String text,
-               @RequestHeader(name = "Authorization", defaultValue = "#{T(com.homework.common.domain.entity.UserContext).getToken()}", required = false) String token);
+    Result speak(@RequestParam("text") String text);
 
     /**
      * 语音合成并播放（指定音色）
      *
      * @param text 要合成的文本
      * @param voiceType 音色类型（female/male）
-     * @param token Authorization头，自动从UserContext获取
      * @return 执行结果
      */
     @PostMapping("/speak/voice")
     Result speakWithVoice(@RequestParam("text") String text, 
-                         @RequestParam("voiceType") String voiceType,
-                         @RequestHeader(name = "Authorization", defaultValue = "#{T(com.homework.common.domain.entity.UserContext).getToken()}", required = false) String token);
+                         @RequestParam("voiceType") String voiceType);
 
     /**
      * 语音合成并播放（指定音量和语速）
@@ -45,13 +41,11 @@ public interface VoiceSynthesisClient {
      * @param voiceType 音色类型（female/male）
      * @param volume 音量（0-100）
      * @param rate 语速（-10到+10）
-     * @param token Authorization头，自动从UserContext获取
      * @return 执行结果
      */
     @PostMapping("/speak/full")
     Result speakFull(@RequestParam("text") String text,
                     @RequestParam("voiceType") String voiceType,
                     @RequestParam("volume") Integer volume,
-                    @RequestParam("rate") Integer rate,
-                    @RequestHeader(name = "Authorization", defaultValue = "#{T(com.homework.common.domain.entity.UserContext).getToken()}", required = false) String token);
+                    @RequestParam("rate") Integer rate);
 }

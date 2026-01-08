@@ -1,4 +1,6 @@
 import os
+import shutil
+import tempfile
 
 os.environ["DEEPFACE_CACHE_DIR"] = r"E:\source\deepface\weights"
 from deepface import DeepFace
@@ -83,10 +85,10 @@ def deepface_model_find(img: str, db: str, model_name=models_name[1]):
         enforce_detection=False,
         silent=True
     )
-    print("find方法已通过")
     # 修复DataFrame结构，确保值和索引长度匹配
     fixed_dfs = []
     for df in dfs:
+        print("df:", df)
         if not df.empty:
             try:
                 # 检查DataFrame结构
@@ -128,7 +130,6 @@ def deepface_model_extract(img: str):
     :param img:
     :return:
     """
-    img = cv2.imread(img)
     face_objs = DeepFace.extract_faces(
         img_path=img,
         detector_backend='opencv',
@@ -160,25 +161,3 @@ def printf(res, desc):
     print('<--------------------------------')
     print()
 
-
-if __name__ == '__main__':
-    init()
-
-    # res1 = deepface_model_verify(img1='img/1-1.jpg', img2='img/1-2.jpg')
-    # printf(res1, "deepface_model_verify")
-
-    # dfs = deepface_model_find(img='img/1-1.jpg', db='img')
-    # printf(dfs, 'deepface_model_find')
-
-    # res2 = deepface_model_analyze(img='img/3-3.jpg')
-    # print(type(res2))
-    # printf(res2, 'deepface_model_analyze')
-    # picture_frame('img/3-3.jpg', res2)
-
-    # face_objs = deepface_model_extract('img/2-2.jpg')
-    # printf(face_objs, 'deepface_model_extract')
-
-    # res3 = deepface_model_represent('img/2-3.jpg')
-    # printf(res3, 'deepface_model_represent')
-
-    deepface_model_stream('img', 'video/3.mp4')

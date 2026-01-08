@@ -14,7 +14,7 @@ public interface UserMapper {
     @Results({
             @Result(property = "userId", column = "user_id"),
             @Result(property = "userType", column = "user_type"),
-            @Result(property = "status", column = "user_status", typeHandler = EnumOrdinalTypeHandler.class),
+            @Result(property = "status", column = "status", typeHandler = EnumOrdinalTypeHandler.class),
             @Result(property = "loginLocation", column = "login_location")
     })
     User selectByUsernameAndPassword(UserDTO user);
@@ -22,23 +22,54 @@ public interface UserMapper {
     @Select("select * from sys_user where user_name = #{userName}")
     @Results({
             @Result(property = "userId", column = "user_id"),
+            @Result(property = "deptId", column = "dept_id"),
             @Result(property = "userName", column = "user_name"),
             @Result(property = "nickName", column = "nick_name"),
             @Result(property = "userType", column = "user_type"),
             @Result(property = "email", column = "email"),
             @Result(property = "phonenumber", column = "phonenumber"),
-            @Result(property = "status", column = "user_status", typeHandler = EnumOrdinalTypeHandler.class),
+            @Result(property = "sex", column = "sex"),
+            @Result(property = "avatar", column = "avatar"),
+            @Result(property = "avatarPath", column = "avatarPath"),
+            @Result(property = "password", column = "password"),
+            @Result(property = "status", column = "status", typeHandler = EnumOrdinalTypeHandler.class),
+            @Result(property = "delFlag", column = "del_flag"),
             @Result(property = "loginIp", column = "login_ip"),
             @Result(property = "loginLocation", column = "login_location"),
-            @Result(property = "loginDate", column = "login_date")
+            @Result(property = "loginDate", column = "login_date"),
+            @Result(property = "pwdUpdateDate", column = "pwd_update_date"),
+            @Result(property = "createBy", column = "create_by"),
+            @Result(property = "createTime", column = "create_time"),
+            @Result(property = "updateBy", column = "update_by"),
+            @Result(property = "updateTime", column = "update_time"),
+            @Result(property = "remark", column = "remark")
     })
     User selectByUsername(String userName);
 
     @Select("select * from sys_user where user_id = #{userId}")
     @Results({
             @Result(property = "userId", column = "user_id"),
-            @Result(property = "status", column = "user_status", typeHandler = EnumOrdinalTypeHandler.class),
-            @Result(property = "loginLocation", column = "login_location")
+            @Result(property = "deptId", column = "dept_id"),
+            @Result(property = "userName", column = "user_name"),
+            @Result(property = "nickName", column = "nick_name"),
+            @Result(property = "userType", column = "user_type"),
+            @Result(property = "email", column = "email"),
+            @Result(property = "phonenumber", column = "phonenumber"),
+            @Result(property = "sex", column = "sex"),
+            @Result(property = "avatar", column = "avatar"),
+            @Result(property = "avatarPath", column = "avatarPath"),
+            @Result(property = "password", column = "password"),
+            @Result(property = "status", column = "status", typeHandler = EnumOrdinalTypeHandler.class),
+            @Result(property = "delFlag", column = "del_flag"),
+            @Result(property = "loginIp", column = "login_ip"),
+            @Result(property = "loginLocation", column = "login_location"),
+            @Result(property = "loginDate", column = "login_date"),
+            @Result(property = "pwdUpdateDate", column = "pwd_update_date"),
+            @Result(property = "createBy", column = "create_by"),
+            @Result(property = "createTime", column = "create_time"),
+            @Result(property = "updateBy", column = "update_by"),
+            @Result(property = "updateTime", column = "update_time"),
+            @Result(property = "remark", column = "remark")
     })
     User searchUserById(Long id);
 
@@ -50,10 +81,20 @@ public interface UserMapper {
             @Result(property = "userType", column = "user_type"),
             @Result(property = "email", column = "email"),
             @Result(property = "phonenumber", column = "phonenumber"),
-            @Result(property = "status", column = "user_status", typeHandler = EnumOrdinalTypeHandler.class),
+            @Result(property = "sex", column = "sex"),
+            @Result(property = "avatar", column = "avatar"),
+            @Result(property = "avatarPath", column = "avatarPath"),
+            @Result(property = "status", column = "status", typeHandler = EnumOrdinalTypeHandler.class),
+            @Result(property = "delFlag", column = "del_flag"),
             @Result(property = "loginIp", column = "login_ip"),
             @Result(property = "loginLocation", column = "login_location"),
-            @Result(property = "loginDate", column = "login_date")
+            @Result(property = "loginDate", column = "login_date"),
+            @Result(property = "pwdUpdateDate", column = "pwd_update_date"),
+            @Result(property = "createBy", column = "create_by"),
+            @Result(property = "createTime", column = "create_time"),
+            @Result(property = "updateBy", column = "update_by"),
+            @Result(property = "updateTime", column = "update_time"),
+            @Result(property = "remark", column = "remark")
     })
     Page<User> searchUserByPage(SearchUserDTO user);
     
@@ -85,12 +126,24 @@ public interface UserMapper {
     @Options(useGeneratedKeys = true, keyProperty = "userId")
     Long updateUser(User user);
 
-    @Insert("insert into sys_user(user_name, password, nick_name, phonenumber, email, user_type) values(#{userName}, #{password}, #{nickName}, #{phonenumber}, #{email}, #{userType})")
+    @Insert("insert into sys_user(user_name, password, nick_name, phonenumber, email, user_type, sex, avatar, status, del_flag, create_time, pwd_update_date) values(#{userName}, #{password}, #{nickName}, #{phonenumber}, #{email}, #{userType}, #{sex}, #{avatar}, #{status}, #{delFlag}, #{createTime}, #{pwdUpdateDate})")
     @Options(useGeneratedKeys = true, keyProperty = "userId")
     @Results({
             @Result(property = "userId", column = "user_id"),
+            @Result(property = "userName", column = "user_name"),
+            @Result(property = "nickName", column = "nick_name"),
+            @Result(property = "userType", column = "user_type"),
+            @Result(property = "email", column = "email"),
+            @Result(property = "phonenumber", column = "phonenumber"),
+            @Result(property = "sex", column = "sex"),
+            @Result(property = "avatar", column = "avatar"),
             @Result(property = "status", column = "user_status", typeHandler = EnumOrdinalTypeHandler.class),
-            @Result(property = "loginLocation", column = "login_location")
+            @Result(property = "delFlag", column = "del_flag"),
+            @Result(property = "createTime", column = "create_time"),
+            @Result(property = "pwdUpdateDate", column = "pwd_update_date"),
+            @Result(property = "loginIp", column = "login_ip"),
+            @Result(property = "loginLocation", column = "login_location"),
+            @Result(property = "loginDate", column = "login_date")
     })
     Long register(User user);
 

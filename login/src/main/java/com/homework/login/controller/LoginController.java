@@ -5,6 +5,7 @@ import com.homework.common.domain.entity.LoginInfo;
 import com.homework.common.domain.entity.Result;
 import com.homework.common.domain.entity.UserContext;
 import com.homework.common.utils.JwtUtils;
+import com.homework.common.service.RedisService;
 import com.homework.common.utils.IpUtils;
 import com.homework.common.config.ServerConfig;
 import com.homework.users.domain.dto.SearchUserDTO;
@@ -41,10 +42,12 @@ public class LoginController extends BaseController {
 
     private final UserService userService;    //注意，这里换成封装的用户
     private final IpifyClient ipifyClient;
+    private final RedisService redisService;
 
-    public LoginController(UserService userService, IpifyClient ipifyClient) {
+    public LoginController(UserService userService, IpifyClient ipifyClient, RedisService redisService) {
         this.userService = userService;
         this.ipifyClient = ipifyClient;
+        this.redisService = redisService;
     }
     /*
     * */
@@ -150,7 +153,7 @@ public class LoginController extends BaseController {
 
         try {
             // 1. 验证旧Token是否有效且未被拉黑
-            if (JwtUtils.isTokenBlacklisted(token)) {
+            if (JwtUtils.isTokenBlacklisted(token, redisService)) {
                 return Result.error("Token已在黑名单中");
             }
 
@@ -171,7 +174,7 @@ public class LoginController extends BaseController {
             newClaims.put("roles", claims.get("roles"));
 
             // 5. 生成新的token
-            String newToken = JwtUtils.generateToken(newClaims);
+            String newToken = JwtUtils.generateToken(newClaims, redisService);
 
             // 6. 构造返回的LoginInfo对象
             LoginInfo info = new LoginInfo();

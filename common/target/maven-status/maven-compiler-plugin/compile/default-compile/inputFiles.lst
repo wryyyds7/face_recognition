@@ -47,6 +47,7 @@ D:\bianchenglianxi\java\project\face_recognition\common\src\main\java\com\homewo
 D:\bianchenglianxi\java\project\face_recognition\common\src\main\java\com\homework\common\domain\enums\EnterpriseClassification.java
 D:\bianchenglianxi\java\project\face_recognition\common\src\main\java\com\homework\common\domain\entity\PositionInfo.java
 D:\bianchenglianxi\java\project\face_recognition\common\src\main\java\com\homework\common\domain\entity\Role.java
+D:\bianchenglianxi\java\project\face_recognition\common\src\main\java\com\homework\common\service\RateLimitService.java
 D:\bianchenglianxi\java\project\face_recognition\common\src\main\java\com\homework\common\CommonApplication.java
 D:\bianchenglianxi\java\project\face_recognition\common\src\main\java\com\homework\common\domain\entity\BoChaResult\WebPages.java
 D:\bianchenglianxi\java\project\face_recognition\common\src\main\java\com\homework\common\domain\dto\LearningPathRecommendationResponseDTO.java
@@ -55,6 +56,7 @@ D:\bianchenglianxi\java\project\face_recognition\common\src\main\java\com\homewo
 D:\bianchenglianxi\java\project\face_recognition\common\src\main\java\com\homework\common\utils\JwtUtils.java
 D:\bianchenglianxi\java\project\face_recognition\common\src\main\java\com\homework\common\domain\entity\TableDataInfo.java
 D:\bianchenglianxi\java\project\face_recognition\common\src\main\java\com\homework\common\exception\file\FileNameLengthLimitExceededException.java
+D:\bianchenglianxi\java\project\face_recognition\common\src\main\java\com\homework\common\service\RedisService.java
 D:\bianchenglianxi\java\project\face_recognition\common\src\main\java\com\homework\common\exception\base\BaseException.java
 D:\bianchenglianxi\java\project\face_recognition\common\src\main\java\com\homework\common\exception\user\UserPasswordNotMatchException.java
 D:\bianchenglianxi\java\project\face_recognition\common\src\main\java\com\homework\common\constant\RoleConstants.java
@@ -66,6 +68,7 @@ D:\bianchenglianxi\java\project\face_recognition\common\src\main\java\com\homewo
 D:\bianchenglianxi\java\project\face_recognition\common\src\main\java\com\homework\common\domain\entity\BoChaResult\SearchApiResponse.java
 D:\bianchenglianxi\java\project\face_recognition\common\src\main\java\com\homework\common\aop\LogAspectNew.java
 D:\bianchenglianxi\java\project\face_recognition\common\src\main\java\com\homework\common\utils\CurrentHolder.java
+D:\bianchenglianxi\java\project\face_recognition\common\src\main\java\com\homework\common\service\ConfigCacheService.java
 D:\bianchenglianxi\java\project\face_recognition\common\src\main\java\com\homework\common\domain\dto\TagRecommendationRequestDTO.java
 D:\bianchenglianxi\java\project\face_recognition\common\src\main\java\com\homework\common\domain\entity\OperLog.java
 D:\bianchenglianxi\java\project\face_recognition\common\src\main\java\com\homework\common\mapper\PermittionMapper.java
@@ -75,6 +78,7 @@ D:\bianchenglianxi\java\project\face_recognition\common\src\main\java\com\homewo
 D:\bianchenglianxi\java\project\face_recognition\common\src\main\java\com\homework\common\constant\APIConstant.java
 D:\bianchenglianxi\java\project\face_recognition\common\src\main\java\com\homework\common\exception\user\BlackListException.java
 D:\bianchenglianxi\java\project\face_recognition\common\src\main\java\com\homework\common\utils\uuid\Seq.java
+D:\bianchenglianxi\java\project\face_recognition\common\src\main\java\com\homework\common\config\RateLimitConfig.java
 D:\bianchenglianxi\java\project\face_recognition\common\src\main\java\com\homework\common\domain\entity\Enterprise.java
 D:\bianchenglianxi\java\project\face_recognition\common\src\main\java\com\homework\common\interceptor\UserInfoInterceptor.java
 D:\bianchenglianxi\java\project\face_recognition\common\src\main\java\com\homework\common\exception\user\UserNotExistsException.java
@@ -89,6 +93,7 @@ D:\bianchenglianxi\java\project\face_recognition\common\src\main\java\com\homewo
 D:\bianchenglianxi\java\project\face_recognition\common\src\main\java\com\homework\common\exception\user\CaptchaException.java
 D:\bianchenglianxi\java\project\face_recognition\common\src\main\java\com\homework\common\constant\JwtClaimsConstant.java
 D:\bianchenglianxi\java\project\face_recognition\common\src\main\java\com\homework\common\exception\file\InvalidExtensionException.java
+D:\bianchenglianxi\java\project\face_recognition\common\src\main\java\com\homework\common\interceptor\RateLimitInterceptor.java
 D:\bianchenglianxi\java\project\face_recognition\common\src\main\java\com\homework\common\domain\entity\EnterpriseInfo.java
 D:\bianchenglianxi\java\project\face_recognition\common\src\main\java\com\homework\common\feign\PythonPortClient.java
 D:\bianchenglianxi\java\project\face_recognition\common\src\main\java\com\homework\common\domain\dto\EnterpriseFavoriteDTO.java
@@ -102,3 +107,4 @@ D:\bianchenglianxi\java\project\face_recognition\common\src\main\java\com\homewo
 D:\bianchenglianxi\java\project\face_recognition\common\src\main\java\com\homework\common\feign\BaiduMapClient.java
 D:\bianchenglianxi\java\project\face_recognition\common\src\main\java\com\homework\common\domain\entity\LoginInfo.java
 D:\bianchenglianxi\java\project\face_recognition\common\src\main\java\com\homework\common\exception\user\UserPasswordRetryLimitExceedException.java
+D:\bianchenglianxi\java\project\face_recognition\common\src\main\java\com\homework\common\config\RedisConfig.java

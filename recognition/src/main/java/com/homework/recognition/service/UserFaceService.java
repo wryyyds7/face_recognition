@@ -70,4 +70,13 @@ public interface UserFaceService {
      * @return 更新后的用户对象
      */
     User clearUserFaces(User user);
+
+    /**
+     * 通过照片路径为用户添加人脸照片
+     *
+     * @param user     用户对象
+     * @param photoPath 照片路径
+     * @return 更新后的用户对象
+     */
+    User addUserFaceByPath(User user, String photoPath);
 }

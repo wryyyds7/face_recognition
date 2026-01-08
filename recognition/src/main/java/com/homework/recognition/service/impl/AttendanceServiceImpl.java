@@ -4,6 +4,7 @@ import com.homework.recognition.domain.entity.AttendanceRecord;
 import com.homework.recognition.domain.entity.FaceRecognitionLog;
 import com.homework.recognition.mapper.AttendanceRecordMapper;
 import com.homework.recognition.mapper.FaceRecognitionLogMapper;
+import com.homework.recognition.service.AttendanceCacheService;
 import com.homework.recognition.service.AttendanceService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,12 +26,15 @@ public class AttendanceServiceImpl implements AttendanceService {
     
     private final FaceRecognitionLogMapper faceRecognitionLogMapper;
     private final AttendanceRecordMapper attendanceRecordMapper;
+    private final AttendanceCacheService attendanceCacheService;
     
     @Autowired
     public AttendanceServiceImpl(FaceRecognitionLogMapper faceRecognitionLogMapper, 
-                               AttendanceRecordMapper attendanceRecordMapper) {
+                               AttendanceRecordMapper attendanceRecordMapper,
+                               AttendanceCacheService attendanceCacheService) {
         this.faceRecognitionLogMapper = faceRecognitionLogMapper;
         this.attendanceRecordMapper = attendanceRecordMapper;
+        this.attendanceCacheService = attendanceCacheService;
     }
     
     @Override
@@ -60,6 +64,10 @@ public class AttendanceServiceImpl implements AttendanceService {
             record.setRemark(remark);
             
             attendanceRecordMapper.insert(record);
+            
+            // 清除相关缓存，确保下次查询获取最新数据
+            attendanceCacheService.clearUserAttendanceCache(userId);
+            
             return record;
         } catch (Exception e) {
             log.error("生成打卡记录失败：{}", e.getMessage(), e);
@@ -70,7 +78,20 @@ public class AttendanceServiceImpl implements AttendanceService {
     @Override
     public List<AttendanceRecord> getAttendanceRecordsByUserId(Long userId) {
         try {
-            return attendanceRecordMapper.selectByUserId(userId);
+            // 先检查缓存
+            List<AttendanceRecord> cachedRecords = attendanceCacheService.getUserAttendanceRecords(userId);
+            if (cachedRecords != null) {
+                log.info("从缓存中获取用户{}的考勤记录，共{}条", userId, cachedRecords.size());
+                return cachedRecords;
+            }
+            
+            // 缓存不存在，查询数据库
+            List<AttendanceRecord> records = attendanceRecordMapper.selectByUserId(userId);
+            
+            // 将结果缓存
+            attendanceCacheService.cacheUserAttendanceRecords(userId, records);
+            
+            return records;
         } catch (Exception e) {
             log.error("根据用户ID查询打卡记录失败：{}", e.getMessage(), e);
             throw new RuntimeException("根据用户ID查询打卡记录失败", e);
@@ -80,7 +101,20 @@ public class AttendanceServiceImpl implements AttendanceService {
     @Override
     public List<AttendanceRecord> getAttendanceRecordsByTimeRange(Date startTime, Date endTime) {
         try {
-            return attendanceRecordMapper.selectByPunchTimeBetween(startTime, endTime);
+            // 先检查缓存
+            List<AttendanceRecord> cachedRecords = attendanceCacheService.getAttendanceRecordsByTimeRange(startTime, endTime);
+            if (cachedRecords != null) {
+                log.info("从缓存中获取时间范围{}至{}的考勤记录，共{}条", startTime, endTime, cachedRecords.size());
+                return cachedRecords;
+            }
+            
+            // 缓存不存在，查询数据库
+            List<AttendanceRecord> records = attendanceRecordMapper.selectByPunchTimeBetween(startTime, endTime);
+            
+            // 将结果缓存
+            attendanceCacheService.cacheAttendanceRecordsByTimeRange(startTime, endTime, records);
+            
+            return records;
         } catch (Exception e) {
             log.error("根据时间范围查询打卡记录失败：{}", e.getMessage(), e);
             throw new RuntimeException("根据时间范围查询打卡记录失败", e);
@@ -90,7 +124,20 @@ public class AttendanceServiceImpl implements AttendanceService {
     @Override
     public List<AttendanceRecord> getAttendanceRecordsByUserIdAndTimeRange(Long userId, Date startTime, Date endTime) {
         try {
-            return attendanceRecordMapper.selectByUserIdAndPunchTimeBetween(userId, startTime, endTime);
+            // 先检查缓存
+            List<AttendanceRecord> cachedRecords = attendanceCacheService.getUserAttendanceRecordsByTimeRange(userId, startTime, endTime);
+            if (cachedRecords != null) {
+                log.info("从缓存中获取用户{}在时间范围{}至{}的考勤记录，共{}条", userId, startTime, endTime, cachedRecords.size());
+                return cachedRecords;
+            }
+            
+            // 缓存不存在，查询数据库
+            List<AttendanceRecord> records = attendanceRecordMapper.selectByUserIdAndPunchTimeBetween(userId, startTime, endTime);
+            
+            // 将结果缓存
+            attendanceCacheService.cacheUserAttendanceRecordsByTimeRange(userId, startTime, endTime, records);
+            
+            return records;
         } catch (Exception e) {
             log.error("根据用户ID和时间范围查询打卡记录失败：{}", e.getMessage(), e);
             throw new RuntimeException("根据用户ID和时间范围查询打卡记录失败", e);
@@ -100,6 +147,15 @@ public class AttendanceServiceImpl implements AttendanceService {
     @Override
     public Map<String, Object> getAttendanceStatistics(Long userId, Date startTime, Date endTime) {
         try {
+            // 先检查缓存
+            Map<String, Object> cachedStatistics = attendanceCacheService.getAttendanceStatistics(userId, startTime, endTime);
+            if (cachedStatistics != null) {
+                String userIdStr = userId != null ? userId.toString() : "global";
+                log.info("从缓存中获取用户{}在时间范围{}至{}的考勤统计数据", userIdStr, startTime, endTime);
+                return cachedStatistics;
+            }
+            
+            // 缓存不存在，查询数据库
             List<AttendanceRecord> records;
             if (userId != null) {
                 records = attendanceRecordMapper.selectByUserIdAndPunchTimeBetween(userId, startTime, endTime);
@@ -134,6 +190,9 @@ public class AttendanceServiceImpl implements AttendanceService {
             double successRate = records.size() > 0 ? (double) successCount / records.size() : 0;
             statistics.put("successRate", successRate);
             
+            // 将结果缓存
+            attendanceCacheService.cacheAttendanceStatistics(userId, startTime, endTime, statistics);
+            
             return statistics;
         } catch (Exception e) {
             log.error("获取打卡统计数据失败：{}", e.getMessage(), e);
@@ -144,7 +203,20 @@ public class AttendanceServiceImpl implements AttendanceService {
     @Override
     public List<FaceRecognitionLog> getRecognitionLogs(Date startTime, Date endTime) {
         try {
-            return faceRecognitionLogMapper.selectByRecognitionTimeBetween(startTime, endTime);
+            // 先检查缓存
+            List<FaceRecognitionLog> cachedLogs = attendanceCacheService.getRecognitionLogs(startTime, endTime);
+            if (cachedLogs != null) {
+                log.info("从缓存中获取时间范围{}至{}的识别日志，共{}条", startTime, endTime, cachedLogs.size());
+                return cachedLogs;
+            }
+            
+            // 缓存不存在，查询数据库
+            List<FaceRecognitionLog> logs = faceRecognitionLogMapper.selectByRecognitionTimeBetween(startTime, endTime);
+            
+            // 将结果缓存
+            attendanceCacheService.cacheRecognitionLogs(startTime, endTime, logs);
+            
+            return logs;
         } catch (Exception e) {
             log.error("获取识别日志列表失败：{}", e.getMessage(), e);
             throw new RuntimeException("获取识别日志列表失败", e);
@@ -174,9 +246,19 @@ public class AttendanceServiceImpl implements AttendanceService {
     @Override
     public boolean hasRecentAttendance(Long userId, int hours) {
         try {
+            // 先检查缓存
+            Boolean cachedResult = attendanceCacheService.getUserRecentAttendance(userId, hours);
+            if (cachedResult != null) {
+                log.info("从缓存中获取用户{}在最近{}小时的打卡状态：{}", userId, hours, cachedResult);
+                return cachedResult;
+            }
+            
+            // 缓存不存在，查询数据库
             // 查询用户最近的打卡记录
             List<AttendanceRecord> records = attendanceRecordMapper.selectByUserId(userId);
             if (records == null || records.isEmpty()) {
+                // 将结果缓存
+                attendanceCacheService.cacheUserRecentAttendance(userId, false, hours);
                 return false;
             }
             
@@ -185,18 +267,24 @@ public class AttendanceServiceImpl implements AttendanceService {
                     .max(Comparator.comparing(AttendanceRecord::getPunchTime))
                     .orElse(null);
             
+            boolean result;
             if (recentRecord == null) {
-                return false;
+                result = false;
+            } else {
+                // 计算时间差（毫秒）
+                long timeDiff = System.currentTimeMillis() - recentRecord.getPunchTime().getTime();
+                
+                // 转换为小时
+                long hoursDiff = timeDiff / (1000 * 60 * 60);
+                
+                // 如果时间差小于指定小时数，返回true
+                result = hoursDiff < hours;
             }
             
-            // 计算时间差（毫秒）
-            long timeDiff = System.currentTimeMillis() - recentRecord.getPunchTime().getTime();
+            // 将结果缓存
+            attendanceCacheService.cacheUserRecentAttendance(userId, result, hours);
             
-            // 转换为小时
-            long hoursDiff = timeDiff / (1000 * 60 * 60);
-            
-            // 如果时间差小于指定小时数，返回true
-            return hoursDiff < hours;
+            return result;
         } catch (Exception e) {
             log.error("检查用户最近打卡记录失败：{}", e.getMessage(), e);
             // 异常情况下默认返回false，允许用户打卡

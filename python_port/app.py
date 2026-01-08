@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify
-from Enter import deepface_model_verify, deepface_model_find, deepface_model_extract
+from Enter import deepface_model_find, deepface_model_extract
 import os
 import time
 import requests

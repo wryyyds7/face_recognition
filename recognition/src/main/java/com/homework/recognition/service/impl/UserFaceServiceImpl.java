@@ -5,6 +5,7 @@ import com.homework.common.utils.FileUploadUtils;
 import com.homework.common.exception.file.*;
 import com.homework.common.utils.MimeTypeUtils;
 import com.homework.recognition.config.PythonServiceConfig;
+import com.homework.recognition.service.FaceFeatureCacheService;
 import com.homework.recognition.service.UserFaceService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,10 +32,12 @@ public class UserFaceServiceImpl implements UserFaceService {
     private static final Logger log = LoggerFactory.getLogger(UserFaceServiceImpl.class);
 
     private final PythonServiceConfig pythonServiceConfig;
+    private final FaceFeatureCacheService faceFeatureCacheService;
 
     @Autowired
-    public UserFaceServiceImpl(PythonServiceConfig pythonServiceConfig) {
+    public UserFaceServiceImpl(PythonServiceConfig pythonServiceConfig, FaceFeatureCacheService faceFeatureCacheService) {
         this.pythonServiceConfig = pythonServiceConfig;
+        this.faceFeatureCacheService = faceFeatureCacheService;
     }
 
     /**
@@ -64,6 +67,9 @@ public class UserFaceServiceImpl implements UserFaceService {
 
             // 5. 更新用户的avatar字段或faceImages字段
             updateUserFacePath(user, targetLocation.toString());
+
+            // 6. 删除旧的人脸特征缓存，因为新的照片可能会改变特征向量
+            faceFeatureCacheService.deleteFaceFeature(user.getUserId());
 
             log.info("用户人脸照片添加成功，保存路径：{}", targetLocation.toString());
             return user;
@@ -107,6 +113,9 @@ public class UserFaceServiceImpl implements UserFaceService {
 
             // 3. 更新用户的faceImages字段
             updateUserFacePaths(user, getUserFaceList(user));
+
+            // 4. 删除旧的人脸特征缓存，因为新的照片可能会改变特征向量
+            faceFeatureCacheService.deleteFaceFeature(user.getUserId());
 
             return user;
         } catch (FileSizeLimitExceededException e) {
@@ -158,7 +167,7 @@ public class UserFaceServiceImpl implements UserFaceService {
             log.info("删除用户人脸照片，用户名：{}，照片文件名：{}", user.getUserName(), imgName);
 
             // 1. 构建文件路径
-            Path userFaceDir = getOrCreateUserFaceDir(user.getUserName());
+            Path userFaceDir = getOrCreateUserFaceDir(user);
             Path imgPath = userFaceDir.resolve(imgName);
 
             // 2. 删除文件
@@ -171,6 +180,9 @@ public class UserFaceServiceImpl implements UserFaceService {
 
             // 3. 更新用户的faceImages字段
             updateUserFacePaths(user, getUserFaceList(user));
+
+            // 4. 删除旧的人脸特征缓存，因为照片变更可能会改变特征向量
+            faceFeatureCacheService.deleteFaceFeature(user.getUserId());
 
             return user;
         } catch (IOException e) {
@@ -187,7 +199,25 @@ public class UserFaceServiceImpl implements UserFaceService {
      */
     @Override
     public List<String> getUserFaceList(User user) {
-        return getUserFaceListByUserName(user.getUserName());
+        try {
+            log.info("获取用户人脸照片列表，用户名：{}", user.getUserName());
+
+            // 1. 构建用户人脸照片目录
+            Path userFaceDir = getOrCreateUserFaceDir(user);
+
+            // 2. 遍历目录，获取所有照片文件
+            List<String> faceImgPaths = new ArrayList<>();
+            Files.list(userFaceDir)
+                    .filter(Files::isRegularFile)
+                    .filter(path -> path.toString().toLowerCase().endsWith(".jpg") || path.toString().toLowerCase().endsWith(".png"))
+                    .forEach(path -> faceImgPaths.add(path.toString()));
+
+            log.info("获取用户人脸照片列表成功，用户名：{}，照片数量：{}", user.getUserName(), faceImgPaths.size());
+            return faceImgPaths;
+        } catch (IOException e) {
+            log.error("获取用户人脸照片列表失败，用户名：{}，错误信息：{}", user.getUserName(), e.getMessage(), e);
+            throw new RuntimeException("获取人脸照片列表失败", e);
+        }
     }
 
     /**
@@ -199,22 +229,34 @@ public class UserFaceServiceImpl implements UserFaceService {
     @Override
     public List<String> getUserFaceListByUserName(String userName) {
         try {
-            log.info("获取用户人脸照片列表，用户名：{}", userName);
+            log.info("根据用户名获取用户人脸照片列表，用户名：{}", userName);
 
-            // 1. 构建用户人脸照片目录
-            Path userFaceDir = getOrCreateUserFaceDir(userName);
-
-            // 2. 遍历目录，获取所有照片文件
+            // 注意：这个方法是为了兼容旧的调用方式
+            // 新的实现应该使用带User对象的getUserFaceList方法
+            // 这里我们需要获取所有包含userName的目录，然后返回所有照片
             List<String> faceImgPaths = new ArrayList<>();
-            Files.list(userFaceDir)
-                    .filter(Files::isRegularFile)
-                    .filter(path -> path.toString().toLowerCase().endsWith(".jpg") || path.toString().toLowerCase().endsWith(".png"))
-                    .forEach(path -> faceImgPaths.add(path.toString()));
+            Path dbPath = Paths.get(pythonServiceConfig.getDbPath());
+            
+            if (Files.exists(dbPath)) {
+                Files.list(dbPath)
+                        .filter(Files::isDirectory)
+                        .filter(dir -> dir.getFileName().toString().startsWith(userName + "_"))
+                        .forEach(dir -> {
+                            try {
+                                Files.list(dir)
+                                        .filter(Files::isRegularFile)
+                                        .filter(path -> path.toString().toLowerCase().endsWith(".jpg") || path.toString().toLowerCase().endsWith(".png"))
+                                        .forEach(path -> faceImgPaths.add(path.toString()));
+                            } catch (IOException e) {
+                                log.error("遍历用户人脸照片目录失败，目录：{}，错误信息：{}", dir.toString(), e.getMessage(), e);
+                            }
+                        });
+            }
 
-            log.info("获取用户人脸照片列表成功，用户名：{}，照片数量：{}", userName, faceImgPaths.size());
+            log.info("根据用户名获取用户人脸照片列表成功，用户名：{}，照片数量：{}", userName, faceImgPaths.size());
             return faceImgPaths;
         } catch (IOException e) {
-            log.error("获取用户人脸照片列表失败，用户名：{}，错误信息：{}", userName, e.getMessage(), e);
+            log.error("根据用户名获取用户人脸照片列表失败，用户名：{}，错误信息：{}", userName, e.getMessage(), e);
             throw new RuntimeException("获取人脸照片列表失败", e);
         }
     }
@@ -231,7 +273,7 @@ public class UserFaceServiceImpl implements UserFaceService {
             log.info("清空用户所有人脸照片，用户名：{}", user.getUserName());
 
             // 1. 获取用户人脸照片目录
-            Path userFaceDir = getOrCreateUserFaceDir(user.getUserName());
+            Path userFaceDir = getOrCreateUserFaceDir(user);
 
             // 2. 遍历目录，删除所有照片文件
             Files.list(userFaceDir)
@@ -248,6 +290,9 @@ public class UserFaceServiceImpl implements UserFaceService {
 
             // 3. 更新用户的faceImages字段
             updateUserFacePaths(user, new ArrayList<>());
+
+            // 4. 删除人脸特征缓存
+            faceFeatureCacheService.deleteFaceFeature(user.getUserId());
 
             log.info("清空用户所有人脸照片成功，用户名：{}", user.getUserName());
             return user;
@@ -292,24 +337,6 @@ public class UserFaceServiceImpl implements UserFaceService {
     }
 
     /**
-     * 根据用户名获取用户人脸照片目录
-     *
-     * @param userName 用户名
-     * @return 用户人脸照片目录路径
-     * @throws IOException IO异常
-     */
-    private Path getOrCreateUserFaceDir(String userName) throws IOException {
-        // 旧方法保留，用于兼容只提供用户名的情况
-        // 实际使用中应优先使用带User参数的方法
-        Path userFaceDir = Paths.get(pythonServiceConfig.getDbPath(), userName);
-        if (!Files.exists(userFaceDir)) {
-            Files.createDirectories(userFaceDir);
-            log.info("创建用户人脸照片目录成功，目录路径：{}", userFaceDir.toString());
-        }
-        return userFaceDir;
-    }
-
-    /**
      * 获取文件扩展名
      *
      * @param filename 文件名
@@ -329,11 +356,9 @@ public class UserFaceServiceImpl implements UserFaceService {
      * @param facePath  人脸照片路径
      */
     private void updateUserFacePath(User user, String facePath) {
-        // 简单实现，只保存第一张照片路径到avatar字段
-        if (user.getAvatar() == null) {
-            user.setAvatar(facePath);
-        }
-        // 这里可以根据需要扩展，比如添加faceImages字段保存多张照片路径
+        // 保存照片路径到avatarPath字段，而不是avatar字段
+        user.setAvatarPath(facePath);
+        // TODO:这里可以根据需要扩展，比如添加faceImages字段保存多张照片路径
     }
 
     /**
@@ -343,13 +368,61 @@ public class UserFaceServiceImpl implements UserFaceService {
      * @param facePaths  人脸照片路径列表
      */
     private void updateUserFacePaths(User user, List<String> facePaths) {
-        // 简单实现，如果没有照片，清空avatar字段
+        // 简单实现，如果没有照片，清空avatarPath字段
         if (facePaths.isEmpty()) {
-            user.setAvatar(null);
+            user.setAvatarPath(null);
         } else {
-            // 保存第一张照片路径到avatar字段
-            user.setAvatar(facePaths.get(0));
+            // 保存第一张照片路径到avatarPath字段
+            user.setAvatarPath(facePaths.get(0));
         }
         // 这里可以根据需要扩展，比如添加faceImages字段保存多张照片路径
+    }
+
+    /**
+     * 通过照片路径为用户添加人脸照片
+     *
+     * @param user     用户对象
+     * @param photoPath 照片路径
+     * @return 更新后的用户对象
+     */
+    @Override
+    public User addUserFaceByPath(User user, String photoPath) {
+        try {
+            log.info("通过照片路径为用户添加人脸照片，用户名：{}，用户ID：{}，照片路径：{}", 
+                    user.getUserName(), user.getUserId(), photoPath);
+
+            // 1. 验证照片文件是否存在
+            Path sourcePath = Paths.get(photoPath);
+            if (!Files.exists(sourcePath)) {
+                throw new RuntimeException("照片文件不存在：" + photoPath);
+            }
+
+            // 2. 确保用户人脸照片目录存在，使用用户名_用户ID作为目录名
+            Path userFaceDir = getOrCreateUserFaceDir(user);
+
+            // 3. 生成文件名，使用用户名_用户ID作为文件名
+            String fileName = generateFileName(user, sourcePath.getFileName().toString());
+
+            // 4. 保存文件（从源路径复制到用户人脸目录）
+            Path targetLocation = userFaceDir.resolve(fileName);
+            Files.copy(sourcePath, targetLocation, StandardCopyOption.REPLACE_EXISTING);
+
+            // 5. 更新用户的avatar字段或faceImages字段
+            updateUserFacePath(user, targetLocation.toString());
+
+            // 6. 删除旧的人脸特征缓存，因为新的照片可能会改变特征向量
+            faceFeatureCacheService.deleteFaceFeature(user.getUserId());
+
+            // 7. 清理临时文件
+            Files.deleteIfExists(sourcePath);
+            log.info("临时照片文件已清理：{}", sourcePath.toString());
+
+            log.info("用户人脸照片添加成功，保存路径：{}", targetLocation.toString());
+            return user;
+        } catch (IOException e) {
+            log.error("通过照片路径为用户添加人脸照片失败，用户名：{}，照片路径：{}，错误信息：{}", 
+                    user.getUserName(), photoPath, e.getMessage(), e);
+            throw new RuntimeException("添加人脸照片失败：" + e.getMessage(), e);
+        }
     }
 }

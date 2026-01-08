@@ -15,12 +15,14 @@ com\homework\common\domain\dto\EnterpriseRecommendationRequestDTO.class
 com\homework\common\service\UploadService.class
 com\homework\common\utils\uuid\IdUtils.class
 com\homework\common\constant\MessageConstant.class
+com\homework\common\config\RateLimitConfig.class
 com\homework\common\domain\entity\Complaint$ComplaintBuilder.class
 com\homework\common\exception\file\FileException.class
 com\homework\common\feign\FeignAuthInterceptor.class
 com\homework\common\domain\dto\LearningPathRecommendationResponseDTO$Skill.class
 com\homework\common\exception\file\FileSizeLimitExceededException.class
 com\homework\common\feign\BaiduMapClient.class
+com\homework\common\config\RedisConfig.class
 com\homework\common\constant\StatusConstant.class
 com\homework\common\config\MvcConfig.class
 com\homework\common\domain\dto\EventRegistrationDTO.class
@@ -58,6 +60,8 @@ com\homework\common\exception\UtilException.class
 com\homework\common\domain\dto\EnterpriseFavoriteDTO.class
 com\homework\common\domain\enums\BusinessType.class
 com\homework\common\domain\entity\Result.class
+com\homework\common\service\ConfigCacheService.class
+com\homework\common\service\RedisService.class
 com\homework\common\domain\entity\PositionInfo.class
 com\homework\common\domain\entity\UserContext.class
 com\homework\common\utils\FileTypeUtils.class
@@ -66,6 +70,7 @@ com\homework\common\feign\PythonPortClient.class
 com\homework\common\domain\entity\ComplaintAttachment$ComplaintAttachmentBuilder.class
 com\homework\common\controller\BaseController.class
 com\homework\common\aop\Log.class
+com\homework\common\interceptor\RateLimitInterceptor.class
 com\homework\common\domain\entity\TableDataInfo.class
 com\homework\common\config\SecurityConfig.class
 com\homework\common\domain\dto\LearningResourceRecommendationRequestDTO.class
@@ -87,6 +92,7 @@ com\homework\common\domain\entity\BoChaResult\Images.class
 com\homework\common\domain\entity\EnterpriseInfo.class
 com\homework\common\exception\GlobalException.class
 com\homework\common\domain\enums\EnterpriseClassification.class
+com\homework\common\service\RateLimitService.class
 com\homework\common\feign\VoiceSynthesisClient.class
 com\homework\common\service\impl\UploadServiceImpl.class
 com\homework\common\domain\entity\Enterprise$EnterpriseBuilder.class

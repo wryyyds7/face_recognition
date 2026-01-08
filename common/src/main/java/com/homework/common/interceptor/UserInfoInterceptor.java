@@ -44,6 +44,7 @@ public class UserInfoInterceptor implements HandlerInterceptor{
                 "/in/**",
                 "/actuator/**",
                 "/swagger-ui/**",
+                "/voice/**",
                 "/v3/api-docs/**",
                 "/error"
         );

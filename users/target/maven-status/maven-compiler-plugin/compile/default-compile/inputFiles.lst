@@ -3,6 +3,7 @@ D:\bianchenglianxi\java\project\face_recognition\users\src\main\java\com\homewor
 D:\bianchenglianxi\java\project\face_recognition\users\src\main\java\com\homework\users\controller\UserController.java
 D:\bianchenglianxi\java\project\face_recognition\users\src\main\java\com\homework\users\domain\entity\UserJobPreference.java
 D:\bianchenglianxi\java\project\face_recognition\users\src\main\java\com\homework\users\domain\dto\AdminDTO.java
+D:\bianchenglianxi\java\project\face_recognition\users\src\main\java\com\homework\users\service\UserCacheService.java
 D:\bianchenglianxi\java\project\face_recognition\users\src\main\java\com\homework\users\UsersApplication.java
 D:\bianchenglianxi\java\project\face_recognition\users\src\main\java\com\homework\users\domain\dto\SearchUserDTO.java
 D:\bianchenglianxi\java\project\face_recognition\users\src\main\java\com\homework\users\domain\entity\UserFavoriteActivity.java

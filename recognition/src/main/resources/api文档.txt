@@ -286,6 +286,36 @@
   }
   ```
 
+#### 2.1.11 直接拍照并为用户添加人脸照片
+- **接口路径**：/recognition/user/face/takeAndAdd
+- **请求方法**：POST
+- **功能描述**：直接调用摄像头拍照并为用户添加人脸照片
+- **请求参数**：
+  - userId：用户ID（Long类型）
+- **响应结果**：
+  - 更新后的用户对象
+- **使用示例**：
+  ```
+  POST /recognition/user/face/takeAndAdd
+  Content-Type: application/json
+  
+  {
+    "userId": 1
+  }
+  ```
+- **返回示例**：
+  ```json
+  {
+    "code": 200,
+    "message": "操作成功",
+    "data": {
+      "userId": 1,
+      "userName": "admin",
+      "faceImages": ["admin_1.jpg"]
+    }
+  }
+  ```
+
 ### 2.2 自动检测管理接口
 
 #### 2.2.1 开启自动检测
@@ -411,6 +441,31 @@
   ```
   POST /recognition/attendance/punch
   Content-Type: application/json
+  ```
+- **返回示例**：
+  ```json
+  {
+    "code": 200,
+    "message": "打卡成功",
+    "data": {
+      "name": "admin"
+    }
+  }
+  ```
+
+#### 2.3.1.1 直接拍照打卡
+- **接口路径**：/recognition/punch/takePhoto
+- **请求方法**：POST
+- **功能描述**：直接调用摄像头拍照并进行人脸识别打卡
+- **请求参数**：无（从Token中获取用户信息）
+- **响应结果**：
+  - 打卡结果
+  - name：识别到的用户名（如果成功）
+- **使用示例**：
+  ```
+  POST /recognition/punch/takePhoto
+  Content-Type: application/json
+  Authorization: Bearer {token}
   ```
 - **返回示例**：
   ```json

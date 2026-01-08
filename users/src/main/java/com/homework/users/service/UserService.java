@@ -39,6 +39,13 @@ public interface UserService {
      * @return 用户信息
      */
     User findByUserName(String userName);
+    
+    /**
+     * 根据用户ID查询用户
+     * @param userId 用户ID
+     * @return 用户信息
+     */
+    User findByUserId(Long userId);
     // 投诉相关方法
     public Long createComplaint(ComplaintDTO complaintDTO);
     public List<UserComplaint> getComplaintList(ComplaintDTO complaintDTO);

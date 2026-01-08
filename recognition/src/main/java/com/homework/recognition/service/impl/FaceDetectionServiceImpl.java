@@ -250,7 +250,6 @@ public class FaceDetectionServiceImpl implements FaceDetectionService {
                     Long extractedUserId = null;
                     // 从文件名中提取用户名（去掉完整路径和后缀）
                     if (identity != null) {
-                        System.out.println("identity不为null");
                         // 先提取文件名（去掉路径）
                         java.io.File identityFile = new java.io.File(identity);
                         String baseName = identityFile.getName();
@@ -262,6 +261,10 @@ public class FaceDetectionServiceImpl implements FaceDetectionService {
                         } else {
                             recognizedName = baseName;
                         }
+                        
+
+
+                        
                         // 从recognizedName中提取用户名和用户ID（格式：name_id）
                         String[] parts = recognizedName.split("_");
                         if (parts.length >= 2) {
@@ -274,7 +277,7 @@ public class FaceDetectionServiceImpl implements FaceDetectionService {
                             }
                         }
                     }
-                    System.out.println("pureName为"+pureName+"\nextractedUserId="+extractedUserId);
+                    
                     result.put("code", 1);
                     result.put("name", pureName);
                     
@@ -291,41 +294,27 @@ public class FaceDetectionServiceImpl implements FaceDetectionService {
                             user = userService.searchUser(searchUserDTO);
                             if (user != null) {
                                 userId = user.getUserId();
-                                // 确保realName不为null，优先使用nickName，否则使用userName，最后使用pureName
-                                realName = user.getNickName() != null ? user.getNickName() : 
-                                          (user.getUserName() != null ? user.getUserName() : pureName);
+                                realName = user.getNickName();
                                 log.info("根据提取的用户ID{}查询到用户：{}", extractedUserId, user.getUserName());
                             } else {
                                 log.warn("根据提取的用户ID{}未找到用户，回退到用户名查询", extractedUserId);
                                 // 回退到用户名查询
                                 user = userService.findByUserName(pureName);
                                 userId = user != null ? user.getUserId() : null;
-                                // 确保realName不为null
-                                realName = user != null ? 
-                                          (user.getNickName() != null ? user.getNickName() : 
-                                           (user.getUserName() != null ? user.getUserName() : pureName)) : 
-                                          pureName;
+                                realName = user != null ? user.getNickName() : pureName;
                             }
                         } catch (Exception e) {
                             log.error("根据用户ID查询失败：{}", e.getMessage(), e);
                             // 异常时回退到用户名查询
                             user = userService.findByUserName(pureName);
                             userId = user != null ? user.getUserId() : null;
-                            // 确保realName不为null
-                            realName = user != null ? 
-                                      (user.getNickName() != null ? user.getNickName() : 
-                                       (user.getUserName() != null ? user.getUserName() : pureName)) : 
-                                      pureName;
+                            realName = user != null ? user.getNickName() : pureName;
                         }
                     } else {
                         // 仅使用用户名查询
                         user = userService.findByUserName(pureName);
                         userId = user != null ? user.getUserId() : null;
-                        // 确保realName不为null
-                        realName = user != null ? 
-                                  (user.getNickName() != null ? user.getNickName() : 
-                                   (user.getUserName() != null ? user.getUserName() : pureName)) : 
-                                  pureName;
+                        realName = user != null ? user.getNickName() : pureName;
                     }
                     
                     // 保存成功照片到指定目录，使用纯用户名命名
@@ -407,7 +396,7 @@ public class FaceDetectionServiceImpl implements FaceDetectionService {
             String finalSpeakText = speakText;
             CompletableFuture.runAsync(() -> {
                 try {
-                    voiceSynthesisClient.speak(finalSpeakText, null);
+                    voiceSynthesisClient.speak(finalSpeakText);
                     log.info("语音播报完成：{}", finalSpeakText);
                 } catch (Exception e) {
                     log.error("语音播报失败：{}", e.getMessage(), e);

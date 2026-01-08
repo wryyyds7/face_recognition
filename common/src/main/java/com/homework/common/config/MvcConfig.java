@@ -1,5 +1,6 @@
 package com.homework.common.config;
 
+import com.homework.common.interceptor.RateLimitInterceptor;
 import com.homework.common.interceptor.UserInfoInterceptor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
@@ -13,21 +14,22 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 public class MvcConfig implements WebMvcConfigurer {
 
     private final UserInfoInterceptor userInfoInterceptor;
+    private final RateLimitInterceptor rateLimitInterceptor;
 
-    public MvcConfig(UserInfoInterceptor userInfoInterceptor) {
+    public MvcConfig(UserInfoInterceptor userInfoInterceptor, RateLimitInterceptor rateLimitInterceptor) {
         this.userInfoInterceptor = userInfoInterceptor;
+        this.rateLimitInterceptor = rateLimitInterceptor;
     }
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-        // 仅注册拦截器，具体的路径匹配由各个业务模块的WebMvcConfigurer实现配置
-        // 避免与业务模块的配置冲突
-        // registry.addInterceptor(userInfoInterceptor);
+        // 注册限流拦截器，放在第一位
+        registry.addInterceptor(rateLimitInterceptor)
+                .addPathPatterns("/**");
+        
+        // 注册用户信息拦截器
+        registry.addInterceptor(userInfoInterceptor)
+                .addPathPatterns("/**");
     }
-
-//    @Override
-//    public void addInterceptors(org.springframework.web.servlet.config.annotation.InterceptorRegistry registry) {
-//        registry.addInterceptor(new UserInfoInterceptor());
-//    }
 
 }
