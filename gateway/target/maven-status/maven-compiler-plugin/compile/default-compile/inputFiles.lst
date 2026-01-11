@@ -1,6 +1,7 @@
 D:\bianchenglianxi\java\project\face_recognition\gateway\src\main\java\com\homework\gateway\config\SecurityConfig.java
 D:\bianchenglianxi\java\project\face_recognition\gateway\src\main\java\com\homework\gateway\filter\JwtAuthenticationFilter.java
-D:\bianchenglianxi\java\project\face_recognition\gateway\src\main\java\com\homework\gateway\filter\EnterpriseGlobalFilter.java
+D:\bianchenglianxi\java\project\face_recognition\gateway\src\main\java\com\homework\gateway\filter\GlobalFilter.java
+D:\bianchenglianxi\java\project\face_recognition\gateway\src\main\java\com\homework\gateway\config\CorsConfig.java
 D:\bianchenglianxi\java\project\face_recognition\gateway\src\main\java\com\homework\gateway\config\JwtPreperties.java
 D:\bianchenglianxi\java\project\face_recognition\gateway\src\main\java\com\homework\gateway\config\AuthProperties.java
 D:\bianchenglianxi\java\project\face_recognition\gateway\src\main\java\com\homework\gateway\filter\AuthGatewayFilter.java

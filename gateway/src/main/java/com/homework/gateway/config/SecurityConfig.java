@@ -19,6 +19,7 @@ public class SecurityConfig {
 
                 // 配置CORS，允许跨域访问
                 .cors(cors -> cors.disable())
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeExchange(auth -> auth
                         .pathMatchers("/in/**", "/recognition/detect", "/recognition/attendance/punch", "/voice/speak/voice")
                                 .permitAll() // 免认证路径

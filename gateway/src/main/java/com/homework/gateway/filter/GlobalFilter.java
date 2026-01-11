@@ -2,10 +2,8 @@ package com.homework.gateway.filter;
 import com.homework.common.utils.CurrentHolder;
 import com.homework.common.utils.JwtUtils;
 import com.homework.gateway.config.AuthProperties;
-import com.homework.gateway.config.JwtPreperties;
 import io.jsonwebtoken.Claims;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
-import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.server.reactive.ServerHttpRequest;
@@ -24,12 +22,12 @@ import java.util.List;
  * 作用为抽离出token，解析并判断
  */
 @Component
-public class EnterpriseGlobalFilter implements GlobalFilter, Ordered {
+public class GlobalFilter implements org.springframework.cloud.gateway.filter.GlobalFilter, Ordered {
 
     private final AuthProperties authProperties;
     private final AntPathMatcher antPathMatcher = new AntPathMatcher();
 
-    public EnterpriseGlobalFilter(AuthProperties authProperties) {
+    public GlobalFilter(AuthProperties authProperties) {
         this.authProperties = authProperties;
     }
     @Override

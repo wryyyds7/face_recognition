@@ -1,124 +1,21 @@
-# 人脸识别系统API文档
+1.下载python模块 pip install deepface -i https://pypi.tuna.tsinghua.edu.cn/simple
 
-## 1. 系统概述
+一般下不到文件，看这里面有一个weigh压缩包，在pip，解压后放在用户的.deepface目录下，比如C:\Users\24148.deepface下，解压 注意，这个.deepface文件建议不要动，我也不知道为什么，就算是改了配置也不能识别除了c盘用户根目录以外的位置！！
 
-人脸识别系统是一个集人脸识别、语音合成、用户管理、考勤打卡等功能于一体的综合系统。
+运行 D:\bianchenglianxi\java\project\face_recognition\python_port\img python模块里面的这个文件夹当做了永久的数据库，用来存放模型认为的、正确头像 （tmd，正确率极低，我用了数据集测试了，大约在60%左右，而且不能多头像，不然会报错， 这个报错不要单用trycatch、throw！！！非常不建议！！！） uploads文件为日志存放的失败或者成功的头像的位置，运行每一天自动删除 photos为检测到人脸之后的检查匹配头像所在位置，我懒得搞数据库存了
+不建议用linux系统，因为时间太赶了，我没做翻译依赖和系统识别
 
-## 2. 服务模块列表
+语音模块用的是windows自带的tts，可能不同的机子会有bug，但是这个很容易修
 
-| 模块名称 | 功能描述 | 服务端口 | 文档地址 |
-|---------|---------|---------|---------|
-| 登录服务 | 用户认证、登录、注册、登出 | 随机 | http://localhost:{port}/swagger-ui.html |
-| 用户服务 | 用户管理、投诉管理 | 随机 | http://localhost:{port}/swagger-ui.html |
-| 人脸识别服务 | 人脸检测、识别、考勤打卡 | 随机 | http://localhost:{port}/swagger-ui.html |
-| 语音合成服务 | 文本转语音 | 随机 | http://localhost:{port}/swagger-ui.html |
-| 公共服务 | 通用工具和功能 | - | - |
-| 网关服务 | 服务路由、负载均衡 | 8080 | - |
+太赶了，没一个一个测试，就是简单地搞了一下，应该有不少bug
 
-## 3. 快速开始
+鉴权是用的两层，一层Gateway里面的过滤，这个要求你先进行登录再进行功能使用， token的值要放在请求头的“Authorization”字段中
 
-### 3.1 环境要求
+日志和实名检测没来的急写，日志就直接拿ruoyi搞了以下识别模块的日志，要加的话，建议在我 之前写的common里面的aop里面改，我写了一个简单的，你再写两个aop用来分页和入库就好
 
-- JDK 17+
-- Maven 3.6+
-- MySQL 8.0+
-- Nacos 2.2.0+
+要有nacos、redis（没来的急用，我还没复习……）， 我之前写了一个简单的nacos、redis、neo4j一起启动的bat脚本， 要是下了而且配了环境可以直接点，然后就会启动
 
-### 3.2 启动步骤
+JAVA没什么好讲的，感谢ruoyi
+配置主要是改数据库部分，在D:\bianchenglianxi\java\project\face_recognition\config中， 主要是有一些java和python模块的共有配置，记得改； 此外，记得recognition的配置也要改，我后面忘记把这两个合并了， 导致其实配置还有不少其实是分开的，之后你们可以搞一下
 
-1. 启动Nacos服务
-2. 初始化数据库
-3. 启动各个服务模块
-4. 访问网关地址：http://localhost:8080
-5. 访问各模块的Swagger UI地址查看API文档
-
-## 4. API文档使用指南
-
-### 4.1 Swagger UI
-
-每个服务模块都提供了Swagger UI界面，用于查看和测试API接口：
-
-1. 启动服务后，访问对应的Swagger UI地址
-2. 在Swagger UI界面中可以查看所有API接口的详细信息
-3. 可以直接在界面中测试API接口，填写参数并发送请求
-4. 查看API响应结果和状态码
-
-### 4.2 API文档JSON
-
-每个服务模块都提供了API文档的JSON格式，可用于导入到其他API管理工具：
-
-```
-http://localhost:{port}/v2/api-docs
-```
-
-## 5. 模块详细文档
-
-### 5.1 登录服务
-
-- **功能**：用户认证、登录、注册、登出
-- **主要接口**：
-  - POST /in/login - 用户登录
-  - POST /in/register - 用户注册
-  - POST /in/logout - 用户登出
-  - POST /in/refreshToken - 刷新Token
-
-### 5.2 用户服务
-
-- **功能**：用户管理、投诉管理
-- **主要接口**：
-  - 管理类接口（需要ADMIN角色）
-  - 投诉类接口（需要USER角色）
-
-### 5.3 人脸识别服务
-
-- **功能**：人脸检测、识别、考勤打卡
-- **主要接口**：
-  - POST /recognition/detect - 手动触发实时人脸检测
-  - POST /recognition/attendance/punch - 手动打卡
-  - POST /recognition/detection/start - 开启自动检测
-  - POST /recognition/detection/stop - 停止自动检测
-
-### 5.4 语音合成服务
-
-- **功能**：文本转语音
-- **主要接口**：
-  - POST /voice/speak - 语音合成并播放
-  - POST /voice/speak/voice - 语音合成并播放（指定音色）
-  - POST /voice/speak/full - 语音合成并播放（指定音量和语速）
-
-## 6. 认证与授权
-
-- 系统使用JWT Token进行认证
-- 登录成功后获取Token，后续请求需要在Header中携带Token
-- Token格式：`Bearer {token}`
-- 不同接口需要不同的角色权限
-
-## 7. 开发与部署
-
-### 7.1 开发环境
-
-1. 克隆代码到本地
-2. 配置开发环境
-3. 启动各服务模块
-4. 访问Swagger UI进行测试
-
-### 7.2 部署环境
-
-1. 打包各服务模块：`mvn clean package`
-2. 部署到服务器
-3. 配置Nacos服务发现
-4. 启动各服务
-
-## 8. 注意事项
-
-- 调用API前请确保已获取有效的Token
-- 人脸照片上传时请确保照片质量良好
-- 自动检测功能会消耗较多系统资源，请合理使用
-- 文本转语音时文本长度不宜过长
-- 所有API请求都需要进行参数校验
-
-## 9. 联系方式
-
-- 项目负责人：王荏宇
-- 技术支持：wry
-- 反馈邮箱：18975333709@163.com
+github地址
