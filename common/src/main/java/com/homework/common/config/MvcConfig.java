@@ -29,7 +29,8 @@ public class MvcConfig implements WebMvcConfigurer {
         
         // 注册用户信息拦截器
         registry.addInterceptor(userInfoInterceptor)
-                .addPathPatterns("/**");
+                .addPathPatterns("/**")
+                .excludePathPatterns("/in/**", "/recognition/detect");
     }
 
 }

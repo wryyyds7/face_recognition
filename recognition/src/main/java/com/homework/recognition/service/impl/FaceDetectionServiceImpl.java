@@ -1,5 +1,6 @@
 package com.homework.recognition.service.impl;
 
+import com.homework.common.domain.entity.Result;
 import com.homework.common.feign.PythonPortClient;
 import com.homework.common.feign.VoiceSynthesisClient;
 import com.homework.common.domain.entity.User;
@@ -28,6 +29,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -295,13 +297,14 @@ public class FaceDetectionServiceImpl implements FaceDetectionService {
                             if (user != null) {
                                 userId = user.getUserId();
                                 realName = user.getNickName();
-                                log.info("根据提取的用户ID{}查询到用户：{}", extractedUserId, user.getUserName());
+                                log.info("根据提取的用户ID{}查询到用户：{}，昵称：{}", extractedUserId, user.getUserName(), user.getNickName());
                             } else {
                                 log.warn("根据提取的用户ID{}未找到用户，回退到用户名查询", extractedUserId);
                                 // 回退到用户名查询
                                 user = userService.findByUserName(pureName);
                                 userId = user != null ? user.getUserId() : null;
                                 realName = user != null ? user.getNickName() : pureName;
+                                log.info("回退到用户名查询，结果：用户={}，昵称={}", user != null ? user.getUserName() : "null", realName);
                             }
                         } catch (Exception e) {
                             log.error("根据用户ID查询失败：{}", e.getMessage(), e);
@@ -309,12 +312,14 @@ public class FaceDetectionServiceImpl implements FaceDetectionService {
                             user = userService.findByUserName(pureName);
                             userId = user != null ? user.getUserId() : null;
                             realName = user != null ? user.getNickName() : pureName;
+                            log.info("异常回退到用户名查询，结果：用户={}，昵称={}", user != null ? user.getUserName() : "null", realName);
                         }
                     } else {
                         // 仅使用用户名查询
                         user = userService.findByUserName(pureName);
                         userId = user != null ? user.getUserId() : null;
                         realName = user != null ? user.getNickName() : pureName;
+                        log.info("仅使用用户名查询，结果：用户={}，昵称={}", user != null ? user.getUserName() : "null", realName);
                     }
                     
                     // 保存成功照片到指定目录，使用纯用户名命名
@@ -336,6 +341,7 @@ public class FaceDetectionServiceImpl implements FaceDetectionService {
                         
                         // 生成打卡记录
                         if (userId != null) {
+                            log.info("准备生成打卡记录，用户ID：{}，用户名：{}，昵称：{}", userId, recognizedName, realName);
                             // 检查用户是否在指定时间内已打卡（默认12小时）
                             boolean hasRecentAttendance = attendanceService.hasRecentAttendance(userId, attendanceConfig.getPunchInterval());
                             if (hasRecentAttendance) {
@@ -345,7 +351,7 @@ public class FaceDetectionServiceImpl implements FaceDetectionService {
                             } else {
                                 // 未打卡，生成打卡记录
                                 attendanceService.generateAttendanceRecord(savedLog.getLogId(), userId, recognizedName, realName, 1, 1, "人脸识别打卡成功");
-                                log.info("打卡记录生成成功：用户{}, ID{}, 时间{}", recognizedName, userId, java.util.Calendar.getInstance().getTime());
+                                log.info("打卡记录生成成功：用户{}, ID{}, 昵称{}, 时间{}", recognizedName, userId, realName, java.util.Calendar.getInstance().getTime());
                             }
                         } else {
                             log.warn("未找到用户信息，无法生成打卡记录：用户{}", recognizedName);
@@ -373,7 +379,7 @@ public class FaceDetectionServiceImpl implements FaceDetectionService {
                     log.info("没有检测到人脸");
                     result.put("code", 3);
                     // 无语音播报
-                    // TODO: 执行未检测到人脸的业务逻辑，例如继续检测等
+
                     break;
 
                 default:
@@ -396,8 +402,11 @@ public class FaceDetectionServiceImpl implements FaceDetectionService {
             String finalSpeakText = speakText;
             CompletableFuture.runAsync(() -> {
                 try {
-                    voiceSynthesisClient.speak(finalSpeakText);
-                    log.info("语音播报完成：{}", finalSpeakText);
+                    // 调用语音合成服务
+                    log.info("语音播报内容：{}", finalSpeakText);
+                    // 使用Feign客户端调用语音合成服务
+                    Result result1 = voiceSynthesisClient.speak(finalSpeakText);
+                    log.info("语音播报结果：{}", result1);
                 } catch (Exception e) {
                     log.error("语音播报失败：{}", e.getMessage(), e);
                 }
@@ -597,15 +606,10 @@ public class FaceDetectionServiceImpl implements FaceDetectionService {
             
             // 2. 发送到Python服务进行人脸验证和识别
             Map<String, Object> verificationResult = verifyFace(photoPath);
-            log.info("人脸验证和识别结果：{}", verificationResult);
+            log.info("人脸验证结果：{}", verificationResult);
             
-            // 3. 处理验证和识别结果
+            // 3. 处理验证和识别结果，复用现有的结果处理逻辑
             Map<String, Object> result = handleVerificationResult(verificationResult, photoPath);
-            
-            // 4. 保存识别日志
-            if (saveResultEnabled) {
-                saveRecognitionLog(verificationResult, photoPath, result);
-            }
             
             return result;
             
@@ -613,6 +617,7 @@ public class FaceDetectionServiceImpl implements FaceDetectionService {
             log.error("单次人脸检测失败：{}", e.getMessage(), e);
             Map<String, Object> result = new HashMap<>();
             result.put("code", 5);
+            result.put("message", "人脸检测失败");
             return result;
         }
     }

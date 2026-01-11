@@ -97,7 +97,10 @@ public class JwtAuthenticationFilter implements WebFilter {
             "/in/**",
             "/actuator/**",
             "/swagger-ui/**",
-            "/v3/api-docs/**"
+            "/v3/api-docs/**",
+            "/recognition/detect",
+            "/recognition/attendance/punch",
+            "/voice/speak/voice"
         };
         for (String excludePath : excludePaths) {
             if (pathMatcher.match(excludePath, path)) {

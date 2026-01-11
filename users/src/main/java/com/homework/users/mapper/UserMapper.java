@@ -122,11 +122,11 @@ public interface UserMapper {
     @Options(useGeneratedKeys = true, keyProperty = "userId")
     User updateUserStatus(User user);
 
-    @Update("update sys_user set user_name = #{userName}, phonenumber = #{phonenumber}, email = #{email} where user_id = #{userId}")
+    @Update("update sys_user set user_name = #{userName}, phonenumber = #{phonenumber}, email = #{email}, avatarPath = #{avatarPath} where user_id = #{userId}")
     @Options(useGeneratedKeys = true, keyProperty = "userId")
     Long updateUser(User user);
 
-    @Insert("insert into sys_user(user_name, password, nick_name, phonenumber, email, user_type, sex, avatar, status, del_flag, create_time, pwd_update_date) values(#{userName}, #{password}, #{nickName}, #{phonenumber}, #{email}, #{userType}, #{sex}, #{avatar}, #{status}, #{delFlag}, #{createTime}, #{pwdUpdateDate})")
+    @Insert("insert into sys_user(user_name, password, nick_name, phonenumber, email, user_type, sex, avatarPath, status, del_flag, create_time, pwd_update_date) values(#{userName}, #{password}, #{nickName}, #{phonenumber}, #{email}, #{userType}, #{sex}, #{avatarPath}, #{status.code}, #{delFlag}, #{createTime}, #{pwdUpdateDate})")
     @Options(useGeneratedKeys = true, keyProperty = "userId")
     @Results({
             @Result(property = "userId", column = "user_id"),

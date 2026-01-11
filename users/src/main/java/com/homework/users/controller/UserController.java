@@ -272,4 +272,50 @@ public class UserController extends BaseController {
             return Result.error("获取投诉附件列表失败: " + e.getMessage());
         }
     }
+    
+    /**
+     * 根据用户名查询用户
+     * @param userName 用户名
+     * @return 用户信息
+     */
+    @GetMapping("/findByUserName/{userName}")
+    public Result findByUserName(@PathVariable("userName") String userName) {
+        log.info("根据用户名查询用户，用户名: {}", userName);
+        try {
+            User user = userService.findByUserName(userName);
+            if (user != null) {
+                log.info("根据用户名查询用户成功，用户ID: {}", user.getUserId());
+                return Result.success(user);
+            } else {
+                log.warn("根据用户名查询用户失败，未找到用户: {}", userName);
+                return Result.error("未找到用户");
+            }
+        } catch (Exception e) {
+            log.error("根据用户名查询用户失败: ", e);
+            return Result.error("查询用户失败: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * 根据用户ID查询用户
+     * @param userId 用户ID
+     * @return 用户信息
+     */
+    @GetMapping("/findByUserId/{userId}")
+    public Result findByUserId(@PathVariable("userId") Long userId) {
+        log.info("根据用户ID查询用户，用户ID: {}", userId);
+        try {
+            User user = userService.findByUserId(userId);
+            if (user != null) {
+                log.info("根据用户ID查询用户成功，用户名: {}", user.getUserName());
+                return Result.success(user);
+            } else {
+                log.warn("根据用户ID查询用户失败，未找到用户: {}", userId);
+                return Result.error("未找到用户");
+            }
+        } catch (Exception e) {
+            log.error("根据用户ID查询用户失败: ", e);
+            return Result.error("查询用户失败: " + e.getMessage());
+        }
+    }
 }

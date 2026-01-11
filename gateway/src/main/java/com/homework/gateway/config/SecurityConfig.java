@@ -16,13 +16,34 @@ public class SecurityConfig {
         // 关键：禁用 CSRF 保护
         http
                 .csrf(csrf -> csrf.disable())
+
+                // 配置CORS，允许跨域访问
+                .cors(cors -> cors.disable())
                 .authorizeExchange(auth -> auth
-                        .pathMatchers("/in/**")
+                        .pathMatchers("/in/**", "/recognition/detect", "/recognition/attendance/punch", "/voice/speak/voice")
                                 .permitAll() // 免认证路径
                         .anyExchange().authenticated() // 其他路径需要认证
                 )
                 .addFilterAt(jwtAuthenticationFilter(), SecurityWebFiltersOrder.AUTHENTICATION); // 添加认证过滤
         return http.build();
+    }
+    
+    /**
+     * CORS配置源
+     * 与CorsConfig.java配合工作，确保跨域请求能正确处理
+     * 
+     * @return CORS配置源
+     */
+    @Bean
+    public org.springframework.web.cors.reactive.CorsConfigurationSource corsConfigurationSource() {
+        org.springframework.web.cors.CorsConfiguration configuration = new org.springframework.web.cors.CorsConfiguration();
+        configuration.addAllowedOrigin("*");
+        configuration.addAllowedMethod("*");
+        configuration.addAllowedHeader("*");
+        configuration.setAllowCredentials(true);
+        org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource source = new org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
     }
 
     @Bean

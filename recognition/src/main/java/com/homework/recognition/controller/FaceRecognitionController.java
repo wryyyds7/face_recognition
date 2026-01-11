@@ -5,8 +5,10 @@ import com.homework.common.domain.entity.Result;
 import com.homework.common.domain.entity.User;
 import com.homework.recognition.service.FaceDetectionService;
 import com.homework.recognition.service.UserFaceService;
+import com.homework.recognition.service.impl.UserFaceServiceImpl;
 import com.homework.users.service.UserService;
 
+import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +16,9 @@ import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -196,14 +201,22 @@ public class FaceRecognitionController extends BaseController {
     /**
      * 为用户添加人脸照片
      *
-     * @param user    用户对象
+     * @param userId  用户ID
+     * @param userName 用户名
      * @param faceImg 人脸照片文件
      * @return 更新后的用户对象
      */
     @PostMapping(value = "/user/face/add", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public Result addUserFace(@ModelAttribute User user, @RequestPart("faceImg") MultipartFile faceImg) {
+    public Result addUserFace(@RequestParam("userId") Long userId, 
+                             @RequestParam("userName") String userName,
+                             @RequestPart("faceImg") MultipartFile faceImg) {
         try {
-            log.info("为用户添加人脸照片，用户名：{}", user.getUserName());
+            // 构建用户对象
+            User user = new User();
+            user.setUserId(userId);
+            user.setUserName(userName);
+            
+            log.info("为用户添加人脸照片，用户名：{}，用户ID：{}", userName, userId);
             User updatedUser = userFaceService.addUserFace(user, faceImg);
             return Result.success(updatedUser);
         } catch (Exception e) {
@@ -254,13 +267,21 @@ public class FaceRecognitionController extends BaseController {
     /**
      * 删除用户人脸照片
      *
-     * @param user     用户对象
-     * @param imgName  要删除的人脸照片文件名
+     * @param request 包含user和imgName的请求体
      * @return 更新后的用户对象
      */
     @PostMapping("/user/face/delete")
-    public Result deleteUserFace(@RequestBody User user, @RequestParam("imgName") String imgName) {
+    public Result deleteUserFace(@RequestBody Map<String, Object> request) {
         try {
+            // 从请求体中获取user对象和imgName
+            Map<String, Object> userMap = (Map<String, Object>) request.get("user");
+            String imgName = (String) request.get("imgName");
+            
+            // 构建User对象
+            User user = new User();
+            user.setUserId(Long.parseLong(userMap.get("userId").toString()));
+            user.setUserName((String) userMap.get("userName"));
+            
             log.info("删除用户人脸照片，用户名：{}，照片文件名：{}", user.getUserName(), imgName);
             User updatedUser = userFaceService.deleteUserFace(user, imgName);
             return Result.success(updatedUser);
@@ -420,6 +441,58 @@ public class FaceRecognitionController extends BaseController {
         } catch (Exception e) {
             log.error("直接拍照并进行人脸识别打卡失败：{}", e.getMessage(), e);
             return Result.error("拍照打卡失败：" + e.getMessage());
+        }
+    }
+    
+    /**
+     * 获取人脸照片的二进制数据，用于前端展示
+     *
+     * @param fileName 照片文件名
+     * @return 照片的二进制数据
+     */
+    @GetMapping("/user/face/photo/{fileName}")
+    public void getFacePhoto(@PathVariable("fileName") String fileName, HttpServletResponse response) {
+        try {
+            log.info("获取人脸照片，文件名：{}", fileName);
+            
+            // 1. 根据文件名查找照片文件
+            // 遍历所有用户目录，查找包含该文件名的文件
+            Path dbPath = Paths.get(((UserFaceServiceImpl)userFaceService).getPythonServiceConfig().getDbPath());
+            Path photoPath = null;
+            
+            if (Files.exists(dbPath)) {
+                // 遍历所有目录
+                for (Path dir : Files.newDirectoryStream(dbPath)) {
+                    if (Files.isDirectory(dir)) {
+                        Path targetFile = dir.resolve(fileName);
+                        if (Files.exists(targetFile)) {
+                            photoPath = targetFile;
+                            break;
+                        }
+                    }
+                }
+            }
+            
+            if (photoPath == null || !Files.exists(photoPath)) {
+                log.error("人脸照片不存在，文件名：{}", fileName);
+                response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                return;
+            }
+            
+            // 2. 设置响应头
+            response.setContentType(Files.probeContentType(photoPath));
+            response.setHeader("Content-Disposition", "inline; filename=" + fileName);
+            
+            // 3. 写入响应
+            Files.copy(photoPath, response.getOutputStream());
+            response.getOutputStream().flush();
+        } catch (Exception e) {
+            log.error("获取人脸照片失败：{}", e.getMessage(), e);
+            try {
+                response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            } catch (Exception ex) {
+                log.error("设置响应状态失败：{}", ex.getMessage(), ex);
+            }
         }
     }
 }

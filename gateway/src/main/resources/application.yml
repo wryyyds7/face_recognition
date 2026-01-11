@@ -12,7 +12,7 @@ spring:
       max-lifetime: 1800000
 
   config:
-    import: nacos:application.yml
+    import: nacos:application.yml,file:${user.dir}/config/config.yml
   security:
     enabled: false
   application:
@@ -96,9 +96,12 @@ hm:
       - /users/**
       - /search/**
       - /system/**
+      - /recognition/detect
 
+# 使用config.yml中的端口配置
 server:
-  port: 8089
+  port: ${gateway.port:8089}
+  allowedUrl: ${gateway.host}
 logging:
   level:
     org.springframework.security: TRACE

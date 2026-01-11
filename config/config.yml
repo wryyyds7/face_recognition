@@ -1,5 +1,10 @@
 # 人脸识别系统共享配置文件
 
+# 网关配置
+gateway:
+  host: localhost
+  port: 8099
+  url: http://${gateway.host}:${gateway.port}
 # Python服务配置
 python:
   port: 0  # 使用随机端口

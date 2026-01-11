@@ -53,6 +53,9 @@ public class AttendanceServiceImpl implements AttendanceService {
     public AttendanceRecord generateAttendanceRecord(Long logId, Long userId, String userName, String realName, 
                                                    Integer punchType, Integer status, String remark) {
         try {
+            log.info("开始生成打卡记录，参数：logId={}, userId={}, userName={}, realName={}, punchType={}, status={}, remark={}", 
+                    logId, userId, userName, realName, punchType, status, remark);
+            
             AttendanceRecord record = new AttendanceRecord();
             record.setRecognitionLogId(logId);
             record.setUserId(userId);
@@ -63,14 +66,18 @@ public class AttendanceServiceImpl implements AttendanceService {
             record.setStatus(status);
             record.setRemark(remark);
             
+            log.info("准备插入打卡记录：{}", record);
             attendanceRecordMapper.insert(record);
+            log.info("打卡记录插入成功，记录ID：{}", record.getRecordId());
             
             // 清除相关缓存，确保下次查询获取最新数据
             attendanceCacheService.clearUserAttendanceCache(userId);
+            log.info("已清除用户{}的考勤缓存", userId);
             
             return record;
         } catch (Exception e) {
-            log.error("生成打卡记录失败：{}", e.getMessage(), e);
+            log.error("生成打卡记录失败：{}，参数：logId={}, userId={}, userName={}, realName={}", 
+                    e.getMessage(), logId, userId, userName, realName, e);
             throw new RuntimeException("生成打卡记录失败", e);
         }
     }

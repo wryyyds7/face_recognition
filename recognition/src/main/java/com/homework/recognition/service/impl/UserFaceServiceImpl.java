@@ -7,6 +7,7 @@ import com.homework.common.utils.MimeTypeUtils;
 import com.homework.recognition.config.PythonServiceConfig;
 import com.homework.recognition.service.FaceFeatureCacheService;
 import com.homework.recognition.service.UserFaceService;
+import com.homework.users.service.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,11 +34,22 @@ public class UserFaceServiceImpl implements UserFaceService {
 
     private final PythonServiceConfig pythonServiceConfig;
     private final FaceFeatureCacheService faceFeatureCacheService;
+    private final UserService userService;
 
     @Autowired
-    public UserFaceServiceImpl(PythonServiceConfig pythonServiceConfig, FaceFeatureCacheService faceFeatureCacheService) {
+    public UserFaceServiceImpl(PythonServiceConfig pythonServiceConfig, FaceFeatureCacheService faceFeatureCacheService, UserService userService) {
         this.pythonServiceConfig = pythonServiceConfig;
         this.faceFeatureCacheService = faceFeatureCacheService;
+        this.userService = userService;
+    }
+    
+    /**
+     * 获取PythonServiceConfig对象，用于外部访问dbPath
+     * 
+     * @return PythonServiceConfig对象
+     */
+    public PythonServiceConfig getPythonServiceConfig() {
+        return pythonServiceConfig;
     }
 
     /**
@@ -70,6 +82,9 @@ public class UserFaceServiceImpl implements UserFaceService {
 
             // 6. 删除旧的人脸特征缓存，因为新的照片可能会改变特征向量
             faceFeatureCacheService.deleteFaceFeature(user.getUserId());
+
+            // 7. 将更新后的用户对象保存到数据库
+            userService.updateUser(user);
 
             log.info("用户人脸照片添加成功，保存路径：{}", targetLocation.toString());
             return user;
@@ -147,7 +162,9 @@ public class UserFaceServiceImpl implements UserFaceService {
             deleteUserFace(user, oldImgName);
 
             // 2. 添加新照片
-            return addUserFace(user, faceImg);
+            User updatedUser = addUserFace(user, faceImg);
+            // 3. 返回更新后的用户对象
+            return updatedUser;
         } catch (Exception e) {
             log.error("更新用户人脸照片失败，用户名：{}，错误信息：{}", user.getUserName(), e.getMessage(), e);
             throw new RuntimeException("更新人脸照片失败", e);
@@ -184,6 +201,9 @@ public class UserFaceServiceImpl implements UserFaceService {
             // 4. 删除旧的人脸特征缓存，因为照片变更可能会改变特征向量
             faceFeatureCacheService.deleteFaceFeature(user.getUserId());
 
+            // 5. 将更新后的用户对象保存到数据库
+            userService.updateUser(user);
+
             return user;
         } catch (IOException e) {
             log.error("删除用户人脸照片失败，用户名：{}，错误信息：{}", user.getUserName(), e.getMessage(), e);
@@ -210,7 +230,10 @@ public class UserFaceServiceImpl implements UserFaceService {
             Files.list(userFaceDir)
                     .filter(Files::isRegularFile)
                     .filter(path -> path.toString().toLowerCase().endsWith(".jpg") || path.toString().toLowerCase().endsWith(".png"))
-                    .forEach(path -> faceImgPaths.add(path.toString()));
+                    .forEach(path -> {
+                        // 返回文件名而不是完整路径，让前端可以通过API访问
+                        faceImgPaths.add(path.getFileName().toString());
+                    });
 
             log.info("获取用户人脸照片列表成功，用户名：{}，照片数量：{}", user.getUserName(), faceImgPaths.size());
             return faceImgPaths;
@@ -246,7 +269,10 @@ public class UserFaceServiceImpl implements UserFaceService {
                                 Files.list(dir)
                                         .filter(Files::isRegularFile)
                                         .filter(path -> path.toString().toLowerCase().endsWith(".jpg") || path.toString().toLowerCase().endsWith(".png"))
-                                        .forEach(path -> faceImgPaths.add(path.toString()));
+                                        .forEach(path -> {
+                                            // 返回文件名而不是完整路径，让前端可以通过API访问
+                                            faceImgPaths.add(path.getFileName().toString());
+                                        });
                             } catch (IOException e) {
                                 log.error("遍历用户人脸照片目录失败，目录：{}，错误信息：{}", dir.toString(), e.getMessage(), e);
                             }
@@ -293,6 +319,9 @@ public class UserFaceServiceImpl implements UserFaceService {
 
             // 4. 删除人脸特征缓存
             faceFeatureCacheService.deleteFaceFeature(user.getUserId());
+
+            // 5. 将更新后的用户对象保存到数据库
+            userService.updateUser(user);
 
             log.info("清空用户所有人脸照片成功，用户名：{}", user.getUserName());
             return user;
@@ -413,7 +442,10 @@ public class UserFaceServiceImpl implements UserFaceService {
             // 6. 删除旧的人脸特征缓存，因为新的照片可能会改变特征向量
             faceFeatureCacheService.deleteFaceFeature(user.getUserId());
 
-            // 7. 清理临时文件
+            // 7. 将更新后的用户对象保存到数据库
+            userService.updateUser(user);
+
+            // 8. 清理临时文件
             Files.deleteIfExists(sourcePath);
             log.info("临时照片文件已清理：{}", sourcePath.toString());
 

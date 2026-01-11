@@ -84,7 +84,7 @@
 #### 2.1.4 为用户添加人脸照片
 - **接口路径**：/recognition/user/face/add
 - **请求方法**：POST
-- **功能描述**：为用户添加人脸照片，文件名和目录名中包含用户ID，格式为`用户名_用户ID`
+- **功能描述**：为用户添加人脸照片
 - **请求参数**：
   - user：用户对象（包含userName和userId等信息）
   - faceImg：人脸照片文件（MultipartFile类型）
@@ -114,7 +114,7 @@
 #### 2.1.5 批量为用户添加人脸照片
 - **接口路径**：/recognition/user/face/batchAdd
 - **请求方法**：POST
-- **功能描述**：批量为用户添加人脸照片，文件名和目录名中包含用户ID，格式为`用户名_用户ID`
+- **功能描述**：批量为用户添加人脸照片
 - **请求参数**：
   - user：用户对象（包含userName和userId等信息）
   - faceImgs：人脸照片文件列表（List<MultipartFile>类型）
@@ -137,7 +137,7 @@
     "data": {
       "userId": 1,
       "userName": "admin",
-      "faceImages": ["admin_1.jpg", "admin_1.jpg"]
+      "faceImages": ["admin_1.jpg", "admin_1_1.jpg"]
     }
   }
   ```
@@ -145,11 +145,11 @@
 #### 2.1.6 更新用户人脸照片
 - **接口路径**：/recognition/user/face/update
 - **请求方法**：POST
-- **功能描述**：更新用户人脸照片，文件名和目录名中包含用户ID，格式为`用户名_用户ID`
+- **功能描述**：更新用户人脸照片
 - **请求参数**：
   - user：用户对象（包含userName和userId等信息）
-  - faceImg：人脸照片文件（MultipartFile类型）
-  - oldImgName：旧照片文件名（String类型，格式为`用户名_用户ID.扩展名`）
+  - faceImg：新的人脸照片文件（MultipartFile类型）
+  - oldImgName：旧的人脸照片文件名（String类型）
 - **响应结果**：
   - 更新后的用户对象
 - **使用示例**：
@@ -169,7 +169,7 @@
     "data": {
       "userId": 1,
       "userName": "admin",
-      "faceImages": ["admin_1.jpg"]
+      "faceImages": ["admin_1_updated.jpg"]
     }
   }
   ```
@@ -177,10 +177,10 @@
 #### 2.1.7 删除用户人脸照片
 - **接口路径**：/recognition/user/face/delete
 - **请求方法**：POST
-- **功能描述**：删除用户人脸照片，文件名格式为`用户名_用户ID.扩展名`
+- **功能描述**：删除用户人脸照片
 - **请求参数**：
   - user：用户对象（包含userName和userId等信息）
-  - imgName：照片文件名（String类型，格式为`用户名_用户ID.扩展名`）
+  - imgName：要删除的人脸照片文件名（String类型）
 - **响应结果**：
   - 更新后的用户对象
 - **使用示例**：
@@ -189,10 +189,11 @@
   Content-Type: application/json
   
   {
-    "user": {"userName": "admin", "userId": 1},
-    "imgName": "admin_1.jpg"
+    "userName": "admin",
+    "userId": 1
   }
   ```
+  - **参数**：imgName=admin_1.jpg
 - **返回示例**：
   ```json
   {
@@ -206,14 +207,14 @@
   }
   ```
 
-#### 2.1.8 获取用户的人脸照片列表
+#### 2.1.8 获取用户人脸照片列表
 - **接口路径**：/recognition/user/face/list
 - **请求方法**：POST
-- **功能描述**：获取用户的人脸照片列表，返回的文件名格式为`用户名_用户ID.扩展名`
+- **功能描述**：获取用户的人脸照片列表
 - **请求参数**：
   - user：用户对象（包含userName和userId等信息）
 - **响应结果**：
-  - 人脸照片列表（文件名格式为`用户名_用户ID.扩展名`）
+  - 人脸照片文件名列表
 - **使用示例**：
   ```
   POST /recognition/user/face/list
@@ -229,18 +230,18 @@
   {
     "code": 200,
     "message": "操作成功",
-    "data": ["admin_1.jpg", "admin_1.jpg"]
+    "data": ["admin_1.jpg", "admin_1_1.jpg"]
   }
   ```
 
-#### 2.1.9 根据用户名获取用户的人脸照片列表
-- **接口路径**：/recognition/user/face/list/{userName}
+#### 2.1.9 根据用户名获取人脸照片列表
+- **接口路径**：/recognition/user/face/list/{nickName}
 - **请求方法**：GET
-- **功能描述**：根据用户名获取用户的人脸照片列表，返回的文件名格式为`用户名_用户ID.扩展名`
+- **功能描述**：根据用户名获取用户的人脸照片列表
 - **请求参数**：
-  - userName：用户名（String类型，路径参数）
+  - nickName：用户名（String类型，路径参数）
 - **响应结果**：
-  - 人脸照片列表（文件名格式为`用户名_用户ID.扩展名`）
+  - 人脸照片文件名列表
 - **使用示例**：
   ```
   GET /recognition/user/face/list/admin
@@ -251,14 +252,14 @@
   {
     "code": 200,
     "message": "操作成功",
-    "data": ["admin_1.jpg", "admin_1.jpg"]
+    "data": ["admin_1.jpg", "admin_1_1.jpg"]
   }
   ```
 
-#### 2.1.10 清空用户的所有人脸照片
+#### 2.1.10 清空用户人脸照片
 - **接口路径**：/recognition/user/face/clear
 - **请求方法**：POST
-- **功能描述**：清空用户的所有人脸照片，包括删除包含用户ID的目录和所有照片文件
+- **功能描述**：清空用户的所有人脸照片
 - **请求参数**：
   - user：用户对象（包含userName和userId等信息）
 - **响应结果**：
@@ -296,12 +297,8 @@
   - 更新后的用户对象
 - **使用示例**：
   ```
-  POST /recognition/user/face/takeAndAdd
+  POST /recognition/user/face/takeAndAdd?userId=1
   Content-Type: application/json
-  
-  {
-    "userId": 1
-  }
   ```
 - **返回示例**：
   ```json
@@ -311,7 +308,32 @@
     "data": {
       "userId": 1,
       "userName": "admin",
-      "faceImages": ["admin_1.jpg"]
+      "faceImages": ["admin_1_photo.jpg"]
+    }
+  }
+  ```
+
+#### 2.1.12 直接拍照打卡
+- **接口路径**：/recognition/detect
+- **请求方法**：POST
+- **功能描述**：直接调用摄像头拍照并进行人脸识别打卡
+- **请求参数**：无
+- **响应结果**：
+  - 打卡结果
+  - name：识别到的用户名（如果成功）
+- **使用示例**：
+  ```
+  POST /recognition/detect
+  Content-Type: application/json
+  ```
+- **返回示例**：
+  ```json
+  {
+    "code": 200,
+    "message": "打卡成功",
+    "data": {
+      "name": "admin",
+      "message": "打卡成功"
     }
   }
   ```
@@ -366,7 +388,7 @@
 - **功能描述**：获取自动检测状态
 - **请求参数**：无
 - **响应结果**：
-  - enabled：是否开启自动检测
+  - enabled：是否开启自动检测（布尔值）
   - message：状态描述
 - **使用示例**：
   ```
@@ -427,131 +449,18 @@
   }
   ```
 
-### 2.3 打卡管理接口
+### 2.3 考勤管理接口
 
-#### 2.3.1 手动打卡
-- **接口路径**：/recognition/attendance/punch
-- **请求方法**：POST
-- **功能描述**：手动打卡
+#### 2.3.1 获取打卡配置
+- **接口路径**：/recognition/attendance/config
+- **请求方法**：GET
+- **功能描述**：获取当前打卡配置
 - **请求参数**：无
 - **响应结果**：
-  - 打卡结果
-  - name：识别到的用户名（如果成功）
+  - punchInterval：打卡时间间隔（小时）
 - **使用示例**：
   ```
-  POST /recognition/attendance/punch
-  Content-Type: application/json
-  ```
-- **返回示例**：
-  ```json
-  {
-    "code": 200,
-    "message": "打卡成功",
-    "data": {
-      "name": "admin"
-    }
-  }
-  ```
-
-#### 2.3.1.1 直接拍照打卡
-- **接口路径**：/recognition/punch/takePhoto
-- **请求方法**：POST
-- **功能描述**：直接调用摄像头拍照并进行人脸识别打卡
-- **请求参数**：无（从Token中获取用户信息）
-- **响应结果**：
-  - 打卡结果
-  - name：识别到的用户名（如果成功）
-- **使用示例**：
-  ```
-  POST /recognition/punch/takePhoto
-  Content-Type: application/json
-  Authorization: Bearer {token}
-  ```
-- **返回示例**：
-  ```json
-  {
-    "code": 200,
-    "message": "打卡成功",
-    "data": {
-      "name": "admin"
-    }
-  }
-  ```
-
-#### 2.3.2 根据用户ID查询打卡记录
-- **接口路径**：/recognition/attendance/record/user/{userId}
-- **请求方法**：GET
-- **功能描述**：根据用户ID查询打卡记录
-- **请求参数**：
-  - userId：用户ID（Long类型，路径参数）
-- **响应结果**：
-  - 打卡记录列表
-- **使用示例**：
-  ```
-  GET /recognition/attendance/record/user/1
-  Content-Type: application/json
-  ```
-- **返回示例**：
-  ```json
-  {
-    "code": 200,
-    "message": "操作成功",
-    "data": [
-      {
-        "recordId": 1,
-        "userId": 1,
-        "userName": "admin",
-        "punchTime": "2026-01-06 09:00:00",
-        "status": "NORMAL"
-      }
-    ]
-  }
-  ```
-
-#### 2.3.3 根据时间范围查询打卡记录
-- **接口路径**：/recognition/attendance/record/range
-- **请求方法**：GET
-- **功能描述**：根据时间范围查询打卡记录
-- **请求参数**：
-  - startTime：开始时间（Date类型，格式：yyyy-MM-dd HH:mm:ss）
-  - endTime：结束时间（Date类型，格式：yyyy-MM-dd HH:mm:ss）
-- **响应结果**：
-  - 打卡记录列表
-- **使用示例**：
-  ```
-  GET /recognition/attendance/record/range?startTime=2026-01-01%2000:00:00&endTime=2026-01-31%2023:59:59
-  Content-Type: application/json
-  ```
-- **返回示例**：
-  ```json
-  {
-    "code": 200,
-    "message": "操作成功",
-    "data": [
-      {
-        "recordId": 1,
-        "userId": 1,
-        "userName": "admin",
-        "punchTime": "2026-01-06 09:00:00",
-        "status": "NORMAL"
-      }
-    ]
-  }
-  ```
-
-#### 2.3.4 获取打卡统计数据
-- **接口路径**：/recognition/attendance/statistics
-- **请求方法**：GET
-- **功能描述**：获取打卡统计数据
-- **请求参数**：
-  - userId：用户ID（Long类型，可选）
-  - startTime：开始时间（Date类型，格式：yyyy-MM-dd）
-  - endTime：结束时间（Date类型，格式：yyyy-MM-dd）
-- **响应结果**：
-  - 打卡统计数据
-- **使用示例**：
-  ```
-  GET /recognition/attendance/statistics?startTime=2026-01-01&endTime=2026-01-31
+  GET /recognition/attendance/config
   Content-Type: application/json
   ```
 - **返回示例**：
@@ -560,11 +469,34 @@
     "code": 200,
     "message": "操作成功",
     "data": {
-      "totalDays": 31,
-      "normalDays": 20,
-      "lateDays": 5,
-      "absentDays": 6
+      "punchInterval": 1
     }
+  }
+  ```
+
+#### 2.3.2 修改打卡时间间隔
+- **接口路径**：/recognition/attendance/config
+- **请求方法**：PUT
+- **功能描述**：修改打卡时间间隔
+- **请求参数**：
+  - punchInterval：打卡时间间隔（小时，Integer类型）
+- **响应结果**：
+  - 操作结果消息
+- **使用示例**：
+  ```
+  PUT /recognition/attendance/config
+  Content-Type: application/json
+  
+  {
+    "punchInterval": 2
+  }
+  ```
+- **返回示例**：
+  ```json
+  {
+    "code": 200,
+    "message": "打卡配置修改成功",
+    "data": null
   }
   ```
 
@@ -581,7 +513,7 @@
   - 识别日志列表
 - **使用示例**：
   ```
-  GET /recognition/log?startTime=2026-01-06%2000:00:00&endTime=2026-01-06%2023:59:59
+  GET /recognition/log?startTime=2026-01-01%2000:00:00&endTime=2026-01-31%2023:59:59
   Content-Type: application/json
   ```
 - **返回示例**：

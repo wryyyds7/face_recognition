@@ -234,6 +234,8 @@ public class UserServiceImpl implements UserService {
         user.setUserName(user.getUserName());
         user.setPhonenumber(user.getPhonenumber());
         user.setEmail(user.getEmail());
+        // 添加avatarPath字段更新
+        user.setAvatarPath(user.getAvatarPath());
         
         // 更新数据库
         Long result = userMapper.updateUser(user);
@@ -332,9 +334,9 @@ public class UserServiceImpl implements UserService {
             user.setSex("");
         }
         
-        // 设置默认头像为空
-        if (user.getAvatar() == null) {
-            user.setAvatar("");
+        // 设置默认头像路径为空
+        if (user.getAvatarPath() == null) {
+            user.setAvatarPath("");
         }
         
         // 设置默认邮箱为空
