@@ -13,7 +13,7 @@
 
 日志和实名检测没来的急写，日志就直接拿ruoyi搞了以下识别模块的日志，要加的话，建议在我 之前写的common里面的aop里面改，我写了一个简单的，你再写两个aop用来分页和入库就好
 
-要有nacos、redis（没来的急用，我还没复习……）， 我之前写了一个简单的nacos、redis、neo4j一起启动的bat脚本， 要是下了而且配了环境可以直接点，然后就会启动
+要有nacos、redis， 我之前写了一个简单的nacos、redis、neo4j一起启动的bat脚本， 要是下了而且配了环境可以直接点，然后就会启动
 
 JAVA没什么好讲的，感谢ruoyi
 配置主要是改数据库部分，在D:\bianchenglianxi\java\project\face_recognition\config中， 主要是有一些java和python模块的共有配置，记得改； 此外，记得recognition的配置也要改，我后面忘记把这两个合并了， 导致其实配置还有不少其实是分开的，之后你们可以搞一下
